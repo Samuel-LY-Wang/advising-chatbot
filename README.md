@@ -1,0 +1,39 @@
+# Academic Advising Chatbot (RAG)
+
+This project builds an academic advising chatbot for UMass Amherst.
+It uses a Retrieval-Augmented Generation (RAG) pipeline to answer questions about course prerequisites, degree requirements, and academic policies.
+
+## Architecture
+
+- **Data collection:** `pipelines/download_pages.py` + `bulk_sources_crawler.py`
+- **Chunking:** `pipelines/chunk.py`
+- **Embedding & Indexing:** `pipelines/embed_index.py` (local SentenceTransformers)
+- **Retrieval:** `rag/pipeline.py`
+- **Web Interface:** `apps/api/main.py` (FastAPI web UI)
+
+
+## Setup
+
+```bash
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+## How to add additional sources
+First, add the link and name into pipelines/bulk_sources_crawler.py \\
+Then, run pipelines/bulk_sources_crawler.py \\
+Then, run pipelines/text_to_json.py to convert the text data into json \\
+Then, run pipelines/chunk.py to chunk the json data. \\
+Finally, run embed_index to vector embed all the chunks. \\
+Should work as intended from there.
+
+## Note on Apple Silicon
+
+The line "import sentence_transformers" will hang if run on Python 3.13 \
+Therefore, if you are using a Silicon mac, create your venv using Python 3.12, with the following setup (conda):
+```bash
+conda create -n venv_name python=3.12
+conda activate venv_name
+pip install -r requirements.txt
+```

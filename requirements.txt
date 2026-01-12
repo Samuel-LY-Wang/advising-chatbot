@@ -1,0 +1,15 @@
+beautifulsoup4
+requests
+sentence-transformers
+faiss-cpu
+numpy
+fastapi
+uvicorn
+pdfminer.six
+
+fastapi
+uvicorn
+jinja2
+langchain
+jq
+pypdf
