@@ -5,7 +5,7 @@ It uses a Retrieval-Augmented Generation (RAG) pipeline to answer questions abou
 
 ## Architecture
 
-- **Data collection:** `pipelines/download_pages.py` + `bulk_sources_crawler.py`
+- **Data collection:** `pipelines/bulk_sources_crawler`
 - **Chunking:** `pipelines/chunk.py`
 - **Embedding & Indexing:** `pipelines/embed_index.py` (local SentenceTransformers)
 - **Retrieval:** `rag/pipeline.py`
@@ -36,4 +36,11 @@ Therefore, if you are using a Silicon mac, create your venv using Python 3.12, w
 conda create -n venv_name python=3.12
 conda activate venv_name
 pip install -r requirements.txt
+```
+
+Alternatively, use uv:
+```bash
+uv venv --python 3.12
+source .venv/bin/activate
+uv pip install -r requirements.txt
 ```
