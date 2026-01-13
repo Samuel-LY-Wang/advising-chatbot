@@ -8,7 +8,11 @@ OUT_DIR = Path("data/raw")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 strip=[5,9]
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/120.0.0.0 Safari/537.36"
+}
 
 SOURCES = {
     "Spring_2026_Course_Descriptions": "https://content.cs.umass.edu/content/spring-2026-course-descriptions",
@@ -35,7 +39,7 @@ def save_text(base_url, cur_url, text):
         f.write(text)
 
 def recursive_fetch(base_url, max_depth=1):
-    text, links = fetch_and_strip(base_url, strip_from_top=strip[0], strip_from_bottom=strip[1])
+    text, links = fetch_and_strip(base_url, strip_from_top=strip[0], strip_from_bottom=strip[1], headers=HEADERS)
     cur_urls = set(links.values())
     save_text(base_url, base_url, text)
     visited = set()
@@ -51,12 +55,14 @@ def recursive_fetch(base_url, max_depth=1):
         new_urls = set()
         for url in cur_urls:
             try:
-                txt, lnks = fetch_and_strip(url, strip_from_top=strip[0], strip_from_bottom=strip[1])
+                txt, lnks = fetch_and_strip(url, headers=HEADERS, strip_from_top=strip[0], strip_from_bottom=strip[1])
                 save_text(base_url, url, txt)
                 new_urls.update(lnks.values())
-            except Exception as e:
+            except ValueError:
                 # print(f"Error fetching {url}: {e}")
                 pass
+            except Exception as e:
+                print(f"Unexpected error fetching {url}: {e}")
 
 def main():
     for name, url in SOURCES.items():

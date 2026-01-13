@@ -2,7 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 from langchain_community.document_loaders import PyPDFLoader
 
-def fetch_and_strip(url, remove_selectors=None, remove_tag_names=None, strip_from_top=0, strip_from_bottom=0, timeout=20):
+ignored_status_codes = set([404, 401, 406])
+
+def fetch_and_strip(url, headers, remove_selectors=None, remove_tag_names=None, strip_from_top=0, strip_from_bottom=0, timeout=20):
     """Fetch a web page and remove likely header/footer elements.
 
     Strategy:
@@ -18,7 +20,9 @@ def fetch_and_strip(url, remove_selectors=None, remove_tag_names=None, strip_fro
         documents = loader.load()
         full_text = "\n".join([doc.page_content for doc in documents])
         return full_text, {}
-    resp = requests.get(url, timeout=timeout)
+    resp = requests.get(url, headers=headers, timeout=timeout)
+    if (resp.status_code in ignored_status_codes):
+        raise ValueError(f"Error fetching {url}: Status code {resp.status_code}")
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
 
@@ -59,7 +63,12 @@ def fetch_and_strip(url, remove_selectors=None, remove_tag_names=None, strip_fro
 if __name__ == "__main__":
     url = "https://content.cs.umass.edu/content/fall-2025-course-description"
     # tweak strip_lines_from_edges if header/footer are not removed by selectors
-    cleaned, links = fetch_and_strip(url, strip_from_top=5, strip_from_bottom=9)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/120.0.0.0 Safari/537.36"
+    }
+    cleaned, links = fetch_and_strip(url, headers=headers, strip_from_top=5, strip_from_bottom=9)
 
 
     with open("test/test_output.txt", "w") as f:
