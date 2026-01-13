@@ -4,7 +4,7 @@ from pathlib import Path
 from source_crawler import fetch_and_strip
 from langchain_community.document_loaders import PyPDFLoader
 
-OUT_DIR = Path("data/raw/bulk")
+OUT_DIR = Path("data/raw")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 strip=[5,9]
 
@@ -27,8 +27,10 @@ def get_key_from_val(d, val):
 def save_text(base_url, cur_url, text):
     out_folder = get_key_from_val(SOURCES, base_url)
     if out_folder is None:
-        return
+        raise ValueError(f"Base URL {base_url} not found in SOURCES.")
     out_path = OUT_DIR / out_folder / (cur_url.replace("https://", "").replace("http://", "").replace("/", "_") + ".txt")
+    if os.path.exists(out_path):
+        return
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(text)
 

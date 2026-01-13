@@ -2,7 +2,7 @@ beautifulsoup4
 requests
 sentence-transformers
 faiss-cpu
-numpy
+numpy<2
 fastapi
 uvicorn
 pdfminer.six
