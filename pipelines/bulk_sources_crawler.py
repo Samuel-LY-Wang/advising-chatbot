@@ -18,10 +18,24 @@ SOURCES = {
     "CICS_Prereq_Changes": "https://www.cics.umass.edu/academics/courses/prerequisite-catalog-and-credit-changes"
 }
 
+def get_key_from_val(d, val):
+    for k, v in d.items():
+        if v == val:
+            return k
+    return None
+
+def save_text(base_url, cur_url, text):
+    out_folder = get_key_from_val(SOURCES, base_url)
+    if out_folder is None:
+        return
+    out_path = OUT_DIR / out_folder / (cur_url.replace("https://", "").replace("http://", "").replace("/", "_") + ".txt")
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(text)
+
 def recursive_fetch(base_url, max_depth=1):
     text, links = fetch_and_strip(base_url, strip_from_top=strip[0], strip_from_bottom=strip[1])
     cur_urls = set(links.values())
-    all_text = text + "\n"
+    save_text(base_url, base_url, text)
     visited = set()
     visited.add(base_url)
     visited.add('') # to avoid searching empty links
@@ -36,22 +50,18 @@ def recursive_fetch(base_url, max_depth=1):
         for url in cur_urls:
             try:
                 txt, lnks = fetch_and_strip(url, strip_from_top=strip[0], strip_from_bottom=strip[1])
-                all_text += txt + "\n"
+                save_text(base_url, url, txt)
                 new_urls.update(lnks.values())
             except Exception as e:
                 # print(f"Error fetching {url}: {e}")
                 pass
-    return all_text
 
 def main():
     for name, url in SOURCES.items():
+        if (not os.path.exists(OUT_DIR / name)):
+            os.makedirs(OUT_DIR / name)
         print(name)
-        try:
-            text = recursive_fetch(url)
-            with open(OUT_DIR / f"{name}.txt", "w", encoding="utf-8") as f:
-                f.write(text)
-        except Exception as e:
-            print(f"Error occured when trying to save {name}: {e}")
+        recursive_fetch(url)
 
 if __name__ == "__main__":
     main()

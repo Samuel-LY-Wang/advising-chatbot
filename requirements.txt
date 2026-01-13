@@ -11,5 +11,6 @@ fastapi
 uvicorn
 jinja2
 langchain
+langchain-community
 jq
 pypdf
