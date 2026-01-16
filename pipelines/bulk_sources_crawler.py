@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 from pathlib import Path
 from source_crawler import fetch_and_strip
 from langchain_community.document_loaders import PyPDFLoader
+from Errors import HTMLFetchError, InvalidURLError
+import time
 
 OUT_DIR = Path("data/raw")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -38,7 +40,7 @@ def save_text(base_url, cur_url, text):
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(text)
 
-def recursive_fetch(base_url, max_depth=1):
+def recursive_fetch(base_url, max_depth=2):
     text, links = fetch_and_strip(base_url, strip_from_top=strip[0], strip_from_bottom=strip[1], headers=HEADERS)
     cur_urls = set(links.values())
     save_text(base_url, base_url, text)
@@ -58,8 +60,9 @@ def recursive_fetch(base_url, max_depth=1):
                 txt, lnks = fetch_and_strip(url, headers=HEADERS, strip_from_top=strip[0], strip_from_bottom=strip[1])
                 save_text(base_url, url, txt)
                 new_urls.update(lnks.values())
-            except ValueError:
-                # print(f"Error fetching {url}: {e}")
+            except HTMLFetchError:
+                pass
+            except InvalidURLError:
                 pass
             except Exception as e:
                 print(f"Unexpected error fetching {url}: {e}")
@@ -71,5 +74,11 @@ def main():
         print(name)
         recursive_fetch(url)
 
+def time_execution(func):
+    start_time = time.time()
+    func()
+    end_time = time.time()
+    print(f"Execution time: {end_time - start_time} seconds")
+
 if __name__ == "__main__":
-    main()
+    time_execution(main)

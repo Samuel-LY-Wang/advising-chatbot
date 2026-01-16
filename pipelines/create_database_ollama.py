@@ -21,8 +21,8 @@ load_dotenv()
 # your .env file.
 openai.api_key = os.environ['OPENAI_API_KEY']
 
-CHROMA_PATH = "chroma"
-DATA_PATH = "data/books"
+CHROMA_PATH = "data/chroma_db"
+DATA_PATH = "data/raw"
 
 
 def main():

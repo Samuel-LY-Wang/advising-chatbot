@@ -1,8 +1,18 @@
 import requests
 from bs4 import BeautifulSoup
 from langchain_community.document_loaders import PyPDFLoader
+from Errors import HTMLFetchError, InvalidURLError
+from urllib.parse import urljoin, urlparse
 
-ignored_status_codes = set([404, 401, 406])
+ignored_status_codes = set([404, 401, 403, 406])
+
+def is_valid_url(url):
+    """Check if URL is valid."""
+    if (url[:7] == "mailto:"):
+        return False
+    if (url[:4] == "tel:"):
+        return False
+    return True
 
 def fetch_and_strip(url, headers, remove_selectors=None, remove_tag_names=None, strip_from_top=0, strip_from_bottom=0, timeout=20):
     """Fetch a web page and remove likely header/footer elements.
@@ -14,6 +24,8 @@ def fetch_and_strip(url, headers, remove_selectors=None, remove_tag_names=None, 
 
     Returns the cleaned text.
     """
+    if not is_valid_url(url):
+        raise InvalidURLError(f"Invalid URL: {url}")
     if (url[-4:].lower() == ".pdf"):
         # print(url)
         loader = PyPDFLoader(url)
@@ -22,8 +34,8 @@ def fetch_and_strip(url, headers, remove_selectors=None, remove_tag_names=None, 
         return full_text, {}
     resp = requests.get(url, headers=headers, timeout=timeout)
     if (resp.status_code in ignored_status_codes):
-        raise ValueError(f"Error fetching {url}: Status code {resp.status_code}")
-    resp.raise_for_status()
+        raise HTMLFetchError(f"Error fetching {url}: Status code {resp.status_code}")
+    # resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
 
     # Remove by tag names first (semantic tags)
@@ -49,7 +61,7 @@ def fetch_and_strip(url, headers, remove_selectors=None, remove_tag_names=None, 
     text = soup.get_text("\n", strip=True)
     links = {}
     for a in soup.find_all("a", href=True):
-        links[a.get_text(strip=True)] = a["href"]
+        links[a.get_text(strip=True)] = urljoin(url, a["href"])
 
     if strip_from_top > 0 or strip_from_bottom > 0:
         lines = [l for l in text.splitlines() if l.strip()]
