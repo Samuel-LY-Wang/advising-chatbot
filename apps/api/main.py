@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')
 import json
 import numpy as np
 from pathlib import Path
-from rag.pipeline import generate_answer as answer
+from rag.query_data import answer_query as answer
 import uvicorn
 
 app = FastAPI(title="Advising Chatbot RAG API")
@@ -38,10 +38,7 @@ def home(request: Request):
 
 @app.get("/ask")
 def ask(q: str = Query(..., description="Your question")):
-    # Pass preloaded key-name embeddings into the generate_answer function
-    key_embs = getattr(app.state, "key_name_embs", None)
-    key_keys = getattr(app.state, "key_name_keys", None)
-    ans = answer(q, key_name_embs=key_embs, key_name_keys=key_keys)
+    ans = answer(q)
     return {"question": q, "answer": ans}
 
 if __name__ == "__main__":
