@@ -38,7 +38,6 @@ def generate_data_store():
     documents = load_documents()
     chunks = split_text(documents)
     save_text(chunks)
-    save_to_chroma(chunks)
 
 def save_text(chunks: list[Document]):
     output_path = os.path.join(CUR_PATH, "data/chunks")
