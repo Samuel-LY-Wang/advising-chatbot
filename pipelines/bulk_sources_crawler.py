@@ -4,7 +4,7 @@ from pathlib import Path
 from source_crawler import fetch_and_strip
 from langchain_community.document_loaders import PyPDFLoader
 from Errors import HTMLFetchError, InvalidURLError
-import time
+import Util
 
 OUT_DIR = Path("data/raw")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -30,23 +30,17 @@ def get_key_from_val(d, val):
             return k
     return None
 
-def save_text(base_url, cur_url, text):
-    out_folder = get_key_from_val(SOURCES, base_url)
-    if out_folder is None:
-        raise ValueError(f"Base URL {base_url} not found in SOURCES.")
-    out_path = OUT_DIR / out_folder / (cur_url.replace("https://", "").replace("http://", "").replace("/", "_") + ".txt")
+def save_text(cur_url, text):
+    out_path = OUT_DIR / (cur_url.replace("https://", "").replace("http://", "").replace("/", "_") + ".txt")
     if os.path.exists(out_path):
         return
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(text)
 
-def recursive_fetch(base_url, max_depth=2):
+def recursive_fetch(base_url, max_depth=2, visited=set()):
     text, links = fetch_and_strip(base_url, strip_from_top=strip[0], strip_from_bottom=strip[1], headers=HEADERS)
     cur_urls = set(links.values())
-    save_text(base_url, base_url, text)
-    visited = set()
-    visited.add(base_url)
-    visited.add('') # to avoid searching empty links
+    save_text(base_url, text)
     new_urls = set()
     for _ in range(max_depth):
         for url in cur_urls:
@@ -58,7 +52,7 @@ def recursive_fetch(base_url, max_depth=2):
         for url in cur_urls:
             try:
                 txt, lnks = fetch_and_strip(url, headers=HEADERS, strip_from_top=strip[0], strip_from_bottom=strip[1])
-                save_text(base_url, url, txt)
+                save_text(url, txt)
                 new_urls.update(lnks.values())
             except HTMLFetchError:
                 pass
@@ -66,19 +60,15 @@ def recursive_fetch(base_url, max_depth=2):
                 pass
             except Exception as e:
                 print(f"Unexpected error fetching {url}: {e}")
+    return visited
 
 def main():
+    visited_so_far = set()
+    visited_so_far.add("")
+    visited_so_far.update(SOURCES.values())
     for name, url in SOURCES.items():
-        if (not os.path.exists(OUT_DIR / name)):
-            os.makedirs(OUT_DIR / name)
         print(name)
-        recursive_fetch(url)
-
-def time_execution(func):
-    start_time = time.time()
-    func()
-    end_time = time.time()
-    print(f"Execution time: {end_time - start_time} seconds")
+        visited_so_far = recursive_fetch(url, visited=visited_so_far)
 
 if __name__ == "__main__":
-    time_execution(main)
+    Util.time_execution(main)

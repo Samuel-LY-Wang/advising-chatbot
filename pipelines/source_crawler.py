@@ -5,13 +5,13 @@ from Errors import HTMLFetchError, InvalidURLError
 from urllib.parse import urljoin, urlparse
 
 ignored_status_codes = set([404, 401, 403, 406])
+ignore_domains = set(["mailto:", "tel:", "youtube.com", "youtu.be", "twitter.com", "facebook.com", "linkedin.com", "arxiv.org"])
 
 def is_valid_url(url):
     """Check if URL is valid."""
-    if (url[:7] == "mailto:"):
-        return False
-    if (url[:4] == "tel:"):
-        return False
+    for dom in ignore_domains:
+        if dom in url:
+            return False
     return True
 
 def fetch_and_strip(url, headers, remove_selectors=None, remove_tag_names=None, strip_from_top=0, strip_from_bottom=0, timeout=20):

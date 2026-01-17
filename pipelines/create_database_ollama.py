@@ -3,13 +3,17 @@ from langchain_community.document_loaders import DirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 # from langchain.embeddings import OpenAIEmbeddings
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
 import openai 
 from dotenv import load_dotenv
 import os
 import shutil
 import nltk
+import Util
+
+import warnings
+warnings.filterwarnings("ignore", message=r"libmagic is unavailable.*")
 
 
 nltk.download('punkt_tab')
@@ -21,8 +25,9 @@ load_dotenv()
 # your .env file.
 openai.api_key = os.environ['OPENAI_API_KEY']
 
-CHROMA_PATH = "data/chroma_db"
-DATA_PATH = "data/raw"
+CUR_PATH = os.getcwd()
+CHROMA_PATH = os.path.join(CUR_PATH, "data/chroma_db")
+DATA_PATH = os.path.join(CUR_PATH, "data/raw")
 
 
 def main():
@@ -32,14 +37,24 @@ def main():
 def generate_data_store():
     documents = load_documents()
     chunks = split_text(documents)
+    save_text(chunks)
     save_to_chroma(chunks)
 
+def save_text(chunks: list[Document]):
+    output_path = os.path.join(CUR_PATH, "data/chunks")
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    for i, chunk in enumerate(chunks):
+        file_path = os.path.join(output_path, f"chunk_{i}.txt")
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(chunk.page_content)
+    print(f"Saved {len(chunks)} chunks to {output_path}.")
 
 def load_documents():
-    loader = DirectoryLoader(DATA_PATH, glob="*.md")
+    loader = DirectoryLoader(DATA_PATH, glob="*.txt", recursive=True)
     ## loader = PyPDFLoader(DATA_PATH + "/the-hundred-page-language-models-book-hands-on-with-pytorch.pdf")
     documents = loader.load()
-
+    print(f"Loaded {len(documents)} documents from {DATA_PATH}.")
     return documents
 
 
@@ -53,7 +68,7 @@ def split_text(documents: list[Document]):
     chunks = text_splitter.split_documents(documents)
     print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
 
-    document = chunks[10]
+    document = chunks[0]
     print(document.page_content)
     print(document.metadata)
 
@@ -74,4 +89,4 @@ def save_to_chroma(chunks: list[Document]):
 
 
 if __name__ == "__main__":
-    main()
+    Util.time_execution(main)

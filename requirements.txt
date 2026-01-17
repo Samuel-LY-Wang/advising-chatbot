@@ -16,3 +16,6 @@ jq
 pypdf
 openai
 nltk
+unstructured
+chromadb
+langchain-ollama
