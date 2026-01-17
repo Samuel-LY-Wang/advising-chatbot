@@ -31,7 +31,7 @@ def get_key_from_val(d, val):
     return None
 
 def save_text(cur_url, text):
-    out_path = OUT_DIR / (cur_url.replace("https://", "").replace("http://", "").replace("/", "_") + ".txt")
+    out_path = OUT_DIR / (cur_url.replace("https://", "").replace("http://", "").replace("/", "_").replace(".", "-") + ".txt")
     if os.path.exists(out_path):
         return
     with open(out_path, "w", encoding="utf-8") as f:

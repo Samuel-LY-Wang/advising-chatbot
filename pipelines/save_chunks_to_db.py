@@ -34,8 +34,8 @@ def load_chunks() -> list[Document]:
     return chunks
 
 def main():
-    chunks = Util.time_execution(load_chunks)
-    save_to_chroma(chunks)
+    chunks = Util.time_execution(load_chunks) # ~11.85s to load all chunks
+    Util.time_execution(lambda: save_to_chroma(chunks)) # 1000 chunks ~ 16.5s, all chunks ~ 45 min
 
 if __name__ == "__main__":
     main()

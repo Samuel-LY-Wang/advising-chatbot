@@ -73,19 +73,5 @@ def split_text(documents: list[Document]):
 
     return chunks
 
-
-def save_to_chroma(chunks: list[Document]):
-    # Clear out the database first.
-    if os.path.exists(CHROMA_PATH):
-        shutil.rmtree(CHROMA_PATH)
-
-    # Create a new DB from the documents.
-    Chroma.from_documents(
-        chunks, OllamaEmbeddings(model="nomic-embed-text", base_url="http://localhost:11434"), persist_directory=CHROMA_PATH
-    )
-    
-    print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}.")
-
-
 if __name__ == "__main__":
-    Util.time_execution(main)
+    Util.time_execution(main) # ~167s (3 minutes)

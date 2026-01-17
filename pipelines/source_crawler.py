@@ -4,8 +4,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from Errors import HTMLFetchError, InvalidURLError
 from urllib.parse import urljoin, urlparse
 
-ignored_status_codes = set([404, 401, 403, 406])
-ignore_domains = set(["mailto:", "tel:", "youtube.com", "youtu.be", "twitter.com", "facebook.com", "linkedin.com", "arxiv.org"])
+ignore_domains = set(["mailto:", "tel:", "youtube.com", "youtu.be", "twitter.com", "facebook.com", "linkedin.com", "arxiv.org", ".pptx"])
 
 def is_valid_url(url):
     """Check if URL is valid."""
@@ -26,14 +25,21 @@ def fetch_and_strip(url, headers, remove_selectors=None, remove_tag_names=None, 
     """
     if not is_valid_url(url):
         raise InvalidURLError(f"Invalid URL: {url}")
-    if (url[-4:].lower() == ".pdf"):
+    url_parsed = urlparse(url).path.lower()
+    if ("pdf" in url) or url_parsed.endswith(".pdf"):
         # print(url)
-        loader = PyPDFLoader(url)
-        documents = loader.load()
-        full_text = "\n".join([doc.page_content for doc in documents])
-        return full_text, {}
+        try:
+            loader = PyPDFLoader(url)
+            documents = loader.load()
+            full_text = "\n".join([doc.page_content for doc in documents])
+            return full_text, {}
+        except Exception as e:
+            if url_parsed.endswith(".pdf"):
+                raise HTMLFetchError(f"Error fetching PDF from {url}: {e}")
+            print(f"Error loading PDF from {url}: {e}")
+            # fallback to HTML fetch
     resp = requests.get(url, headers=headers, timeout=timeout)
-    if (resp.status_code in ignored_status_codes):
+    if not resp.ok:
         raise HTMLFetchError(f"Error fetching {url}: Status code {resp.status_code}")
     # resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
@@ -73,7 +79,7 @@ def fetch_and_strip(url, headers, remove_selectors=None, remove_tag_names=None, 
 
 
 if __name__ == "__main__":
-    url = "https://content.cs.umass.edu/content/fall-2025-course-description"
+    url = "https://openreview.net/pdf?id=4R0pugRyN5"
     # tweak strip_lines_from_edges if header/footer are not removed by selectors
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
