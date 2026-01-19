@@ -3,8 +3,7 @@ import os
 from dotenv import load_dotenv
 # from dataclasses import dataclass
 from langchain_chroma import Chroma
-from langchain_community.chat_models import ChatOllama
-from langchain_ollama import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_core.prompts import PromptTemplate
 from pathlib import Path
 
@@ -36,7 +35,7 @@ def answer_query(query_text: str):
 
     # Search the DB.
     results = search_DB(db, query_text, k=3)
-    print(results)
+    # print(results)
     if len(results) == 0 or results[0][1] < 0.5:
         return "Unable to find matching results."
 
@@ -49,11 +48,11 @@ def answer_query(query_text: str):
 
     llm = ChatOllama(model="mistral")
     
-    response_text = llm.invoke(prompt)
+    response_text = llm.invoke(prompt).content
 
     sources = [doc.metadata.get("source", None) for doc, _score in results]
-    formatted_response = f"Response: {response_text}\nSources: {sources}"
-    return formatted_response
+    formatted_response = f"{response_text}".strip()
+    return formatted_response, sources
 
 
 def main():
@@ -77,11 +76,11 @@ def main():
         input_variables=["length", "topic", "audience"]
     )
     prompt = prompt_template.format(context=context_text, question=query_text)
-    print(prompt)
+    # print(prompt)
 
-    llm = ChatOllama(model="ollama-mistral-7b")
+    llm = ChatOllama(model="mistral")
     
-    response_text = llm.invoke(prompt)
+    response_text = llm.invoke(prompt).content.strip()
 
     sources = [doc.metadata.get("source", None) for doc, _score in results]
     formatted_response = f"Response: {response_text}\nSources: {sources}"
