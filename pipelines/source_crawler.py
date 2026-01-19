@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from langchain_community.document_loaders import PyPDFLoader
-from Errors import HTMLFetchError, InvalidURLError
+from pipelines.Errors import HTMLFetchError, InvalidURLError
 from urllib.parse import urljoin, urlparse
 
 ignore_domains = set(["mailto:", "tel:", "youtube.com", "youtu.be", "twitter.com", "facebook.com", "linkedin.com", "arxiv.org", ".pptx"])

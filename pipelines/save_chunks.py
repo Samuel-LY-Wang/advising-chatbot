@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 import os
 import shutil
 import nltk
-import Util
+from pipelines import Util
 
 import warnings
 warnings.filterwarnings("ignore", message=r"libmagic is unavailable.*")
@@ -66,9 +66,9 @@ def split_text(documents: list[Document]):
     chunks = text_splitter.split_documents(documents)
     print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
 
-    document = chunks[0]
-    print(document.page_content)
-    print(document.metadata)
+    # document = chunks[0]
+    # print(document.page_content)
+    # print(document.metadata)
 
     return chunks
 

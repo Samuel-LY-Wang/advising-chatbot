@@ -8,7 +8,7 @@ import json
 import numpy as np
 from pathlib import Path
 from rag.query_data import answer_query as answer
-from pipelines import bulk_sources_crawler, save_chunks, save_chunks_to_db
+from pipelines import bulk_sources_crawler, save_chunks, save_chunks_to_db, Util
 import uvicorn
 
 app = FastAPI(title="Advising Chatbot RAG API")
@@ -21,12 +21,12 @@ def home(request: Request):
 
 @app.get("/ask")
 def ask(q: str = Query(..., description="Your question")):
-    ans = answer(q)
+    ans = Util.time_execution(lambda: answer(q)) # Just see how long each query takes on laptop
     return {"question": q, "answer": ans}
 
 @app.get("/rebuild_embeddings")
 def rebuild_embeddings(request: Request):
-    api_key = request.headers.get("x-api-key")
+    api_key = request.headers.get("api-key")
     expected_key = os.getenv("REBUILD_API_KEY")
     if api_key != expected_key:
         return {"status": "error", "message": "API Key is missing or invalid."}

@@ -2,12 +2,14 @@ import argparse
 import os
 from dotenv import load_dotenv
 # from dataclasses import dataclass
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_community.chat_models import ChatOllama
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from langchain_core.prompts import PromptTemplate
+from pathlib import Path
 
-CHROMA_PATH = "chroma"
+CUR_PATH = Path.cwd()
+CHROMA_PATH = os.path.join(CUR_PATH, "data/chroma_db")
 
 PROMPT_TEMPLATE = """
 Answer the question based only on the following context:

@@ -19,3 +19,4 @@ nltk
 unstructured
 chromadb
 langchain-ollama
+langchain-chroma

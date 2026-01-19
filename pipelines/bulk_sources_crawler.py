@@ -1,10 +1,10 @@
 ﻿import os, time, requests
 from bs4 import BeautifulSoup
 from pathlib import Path
-from source_crawler import fetch_and_strip
+from pipelines.source_crawler import fetch_and_strip
 from langchain_community.document_loaders import PyPDFLoader
-from Errors import HTMLFetchError, InvalidURLError
-import Util
+from pipelines.Errors import HTMLFetchError, InvalidURLError
+from pipelines import Util
 
 OUT_DIR = Path("data/raw")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
