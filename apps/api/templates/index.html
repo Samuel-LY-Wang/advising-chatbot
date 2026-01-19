@@ -45,7 +45,7 @@
         const data = await res.json();
         document.getElementById(
           "response"
-        ).innerHTML = `<b>Answer:</b> ${data.answer.content}<br/><b>Sources:</b> ${data.sources.join(
+        ).innerHTML = `<b>Answer:</b> ${data.answer}<br/><b>Sources:</b> ${data.sources.join(
           ", "
         )}`;
       });

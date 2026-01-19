@@ -22,8 +22,8 @@ def home(request: Request):
 @app.get("/ask")
 def ask(q: str = Query(..., description="Your question")):
     ans, sources = Util.time_execution(lambda: answer(q)) # Just see how long each query takes on laptop
-    # print(ans)
-    return {"question": q, "answer": ans, "sources": sources}
+    print(ans)
+    return {"question": q, "answer": str(ans), "sources": sources}
 
 @app.get("/rebuild_embeddings")
 def rebuild_embeddings(request: Request):
