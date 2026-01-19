@@ -36,7 +36,8 @@ def answer_query(query_text: str):
 
     # Search the DB.
     results = search_DB(db, query_text, k=3)
-    if len(results) == 0 or results[0][1] < 0.7:
+    print(results)
+    if len(results) == 0 or results[0][1] < 0.5:
         return "Unable to find matching results."
 
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
@@ -46,7 +47,7 @@ def answer_query(query_text: str):
     )
     prompt = prompt_template.format(context=context_text, question=query_text)
 
-    llm = ChatOllama(model="ollama-mistral-7b")
+    llm = ChatOllama(model="mistral")
     
     response_text = llm.invoke(prompt)
 

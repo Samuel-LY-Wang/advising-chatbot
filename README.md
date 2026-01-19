@@ -20,6 +20,16 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+## Local LLM Integration
+This project uses Ollama to run LLMs locally. Therefore, before running the code, you must:
+- Install Ollama
+- ```bash
+ollama pull nomic-embed-text
+```
+- ```bash
+ollama pull mistral
+```
+
 ## How to add additional sources
 First, add the link and name into pipelines/bulk_sources_crawler.py \\
 Then, run pipelines/bulk_sources_crawler.py \\
