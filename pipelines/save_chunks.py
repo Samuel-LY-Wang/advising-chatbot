@@ -26,7 +26,7 @@ load_dotenv()
 openai.api_key = os.environ['OPENAI_API_KEY']
 
 CUR_PATH = os.getcwd()
-CHROMA_PATH = os.path.join(CUR_PATH, "data/chroma_db")
+OUT_PATH = os.path.join(CUR_PATH, "data/chunks")
 DATA_PATH = os.path.join(CUR_PATH, "data/raw")
 
 
@@ -34,13 +34,12 @@ def main():
     generate_data_store()
 
 
-def generate_data_store():
-    documents = load_documents()
+def generate_data_store(data_path=DATA_PATH, output_path=OUT_PATH):
+    documents = load_documents(data_path)
     chunks = split_text(documents)
-    save_text(chunks)
+    save_text(chunks, output_path)
 
-def save_text(chunks: list[Document]):
-    output_path = os.path.join(CUR_PATH, "data/chunks")
+def save_text(chunks: list[Document], output_path=OUT_PATH):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     for i, chunk in enumerate(chunks):
@@ -49,11 +48,11 @@ def save_text(chunks: list[Document]):
             f.write(chunk.page_content)
     print(f"Saved {len(chunks)} chunks to {output_path}.")
 
-def load_documents():
-    loader = DirectoryLoader(DATA_PATH, glob="*.txt", recursive=True)
+def load_documents(data_path=DATA_PATH) -> list[Document]:
+    loader = DirectoryLoader(data_path, glob="*.txt", recursive=True)
     ## loader = PyPDFLoader(DATA_PATH + "/the-hundred-page-language-models-book-hands-on-with-pytorch.pdf")
     documents = loader.load()
-    print(f"Loaded {len(documents)} documents from {DATA_PATH}.")
+    print(f"Loaded {len(documents)} documents from {data_path}.")
     return documents
 
 

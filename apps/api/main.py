@@ -8,29 +8,12 @@ import json
 import numpy as np
 from pathlib import Path
 from rag.query_data import answer_query as answer
+from pipelines import bulk_sources_crawler, save_chunks, save_chunks_to_db
 import uvicorn
 
 app = FastAPI(title="Advising Chatbot RAG API")
 templates = Jinja2Templates(directory="apps/api/templates")
 
-
-@app.on_event("startup")
-def load_key_name_embeddings():
-    idx_dir = Path("data/indices")
-    emb_path = idx_dir / "key_name_embs.npy"
-    meta_path = idx_dir / "key_name_meta.json"
-    if emb_path.exists() and meta_path.exists():
-        try:
-            app.state.key_name_embs = np.load(str(emb_path))
-            app.state.key_name_keys = json.loads(meta_path.read_text(encoding="utf-8")).get("keys", [])
-            print(f"Loaded {len(app.state.key_name_keys)} key-name embeddings")
-        except Exception as e:
-            print("Failed to load key-name embeddings:", e)
-            app.state.key_name_embs = None
-            app.state.key_name_keys = None
-    else:
-        app.state.key_name_embs = None
-        app.state.key_name_keys = None
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
@@ -40,6 +23,22 @@ def home(request: Request):
 def ask(q: str = Query(..., description="Your question")):
     ans = answer(q)
     return {"question": q, "answer": ans}
+
+@app.get("/rebuild_embeddings")
+def rebuild_embeddings(request: Request):
+    api_key = request.headers.get("x-api-key")
+    expected_key = os.getenv("REBUILD_API_KEY")
+    if api_key != expected_key:
+        return {"status": "error", "message": "API Key is missing or invalid."}
+
+    try:
+        bulk_sources_crawler.fetch_all()
+        save_chunks.generate_data_store()
+        chunks = save_chunks_to_db.load_chunks()
+        save_chunks_to_db.save_to_chroma(chunks)
+        return {"status": "success", "message": "Embeddings rebuilt successfully."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

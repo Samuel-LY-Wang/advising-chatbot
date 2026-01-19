@@ -16,13 +16,13 @@ HEADERS = {
                   "Chrome/120.0.0.0 Safari/537.36"
 }
 
-SOURCES = {
-    "Spring_2026_Course_Descriptions": "https://content.cs.umass.edu/content/spring-2026-course-descriptions",
-    "Fall_2025_Course_Descriptions": "https://content.cs.umass.edu/content/fall-2025-course-description",
-    "Spring_2025_Course_Descriptions": "https://content.cs.umass.edu/content/spring-2025-course-descriptions",
-    "Fall_2024_Course_Descriptions": "https://content.cs.umass.edu/content/fall-2024-course-descriptions",
-    "CICS_Prereq_Changes": "https://www.cics.umass.edu/academics/courses/prerequisite-catalog-and-credit-changes"
-}
+SOURCES = [
+    "https://content.cs.umass.edu/content/spring-2026-course-descriptions",
+    "https://content.cs.umass.edu/content/fall-2025-course-description",
+    "https://content.cs.umass.edu/content/spring-2025-course-descriptions",
+    "https://content.cs.umass.edu/content/fall-2024-course-descriptions",
+    "https://www.cics.umass.edu/academics/courses/prerequisite-catalog-and-credit-changes"
+]
 
 def get_key_from_val(d, val):
     for k, v in d.items():
@@ -65,9 +65,16 @@ def recursive_fetch(base_url, max_depth=2, visited=set()):
 def main():
     visited_so_far = set()
     visited_so_far.add("")
-    visited_so_far.update(SOURCES.values())
-    for name, url in SOURCES.items():
-        print(name)
+    visited_so_far.update(SOURCES)
+    for url in SOURCES:
+        # print(url)
+        visited_so_far = recursive_fetch(url, visited=visited_so_far)
+
+def fetch_all(sources=SOURCES):
+    visited_so_far = set()
+    visited_so_far.add("")
+    visited_so_far.update(sources)
+    for url in sources:
         visited_so_far = recursive_fetch(url, visited=visited_so_far)
 
 if __name__ == "__main__":
