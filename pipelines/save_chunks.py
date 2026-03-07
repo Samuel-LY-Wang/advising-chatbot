@@ -10,12 +10,14 @@ from dotenv import load_dotenv
 import os
 import shutil
 import nltk
-from pipelines import Util
+try:
+    from pipelines import Util
+except ModuleNotFoundError:
+    import Util
 import json
 
 import warnings
 warnings.filterwarnings("ignore", message=r"libmagic is unavailable.*")
-
 
 nltk.download('punkt_tab')
 nltk.download('averaged_perceptron_tagger_eng')
@@ -35,9 +37,10 @@ def main():
     generate_data_store()
 
 
-def generate_data_store(data_path=DATA_PATH, output_path=OUT_PATH):
+def generate_data_store(data_path=DATA_PATH, output_path=OUT_PATH, urls=None):
     documents = load_documents(data_path)
     chunks, doc_chunk_mapping = split_text(documents)
+    print(doc_chunk_mapping)
     save_text(chunks, doc_chunk_mapping, output_path)
 
 def save_text(chunks: list[Document], doc_chunk_mapping: dict[int, str], output_path=OUT_PATH):

@@ -1,10 +1,15 @@
 ﻿import os, time, requests
 from bs4 import BeautifulSoup
 from pathlib import Path
-from pipelines.source_crawler import fetch_and_strip
 from langchain_community.document_loaders import PyPDFLoader
-from pipelines.Errors import HTMLFetchError, InvalidURLError
-from pipelines import Util
+try:
+    from pipelines.Errors import HTMLFetchError, InvalidURLError
+    from pipelines import Util
+    from pipelines.source_crawler import fetch_and_strip
+except ModuleNotFoundError:
+    from Errors import HTMLFetchError, InvalidURLError
+    import Util
+    from source_crawler import fetch_and_strip
 
 OUT_DIR = Path("data/raw")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -24,6 +29,9 @@ SOURCES = [
     "https://www.cics.umass.edu/academics/courses/prerequisite-catalog-and-credit-changes"
 ]
 
+def clean_url(url):
+    return url.replace("https://", "").replace("http://", "").replace("/", "_").replace(".", "-")+".txt"
+
 def get_key_from_val(d, val):
     for k, v in d.items():
         if v == val:
@@ -31,13 +39,15 @@ def get_key_from_val(d, val):
     return None
 
 def save_text(cur_url, text):
-    out_path = OUT_DIR / (cur_url.replace("https://", "").replace("http://", "").replace("/", "_").replace(".", "-") + ".txt")
+    out_path = OUT_DIR / clean_url(cur_url)
+    if not out_path.parent.exists():
+        out_path.parent.mkdir(parents=True, exist_ok=True)
     if os.path.exists(out_path):
         return
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(text)
 
-def recursive_fetch(base_url, max_depth=2, visited=set()):
+def recursive_fetch(base_url, max_depth=2, visited=set(), cur_url_mappings = {}):
     text, links = fetch_and_strip(base_url, strip_from_top=strip[0], strip_from_bottom=strip[1], headers=HEADERS)
     cur_urls = set(links.values())
     save_text(base_url, text)
@@ -60,22 +70,28 @@ def recursive_fetch(base_url, max_depth=2, visited=set()):
                 pass
             except Exception as e:
                 print(f"Unexpected error fetching {url}: {e}")
-    return visited
+    rev_url_mappings = cur_url_mappings
+    for cur_url in visited:
+        rev_url_mappings[clean_url(cur_url)] = cur_url
+    return visited, rev_url_mappings
 
 def main():
     visited_so_far = set()
+    cur_url_mappings = {}
     visited_so_far.add("")
     visited_so_far.update(SOURCES)
     for url in SOURCES:
         # print(url)
-        visited_so_far = recursive_fetch(url, visited=visited_so_far)
+        visited_so_far, cur_url_mappings = recursive_fetch(url, visited=visited_so_far, cur_url_mappings=cur_url_mappings)
 
 def fetch_all(sources=SOURCES):
     visited_so_far = set()
+    cur_url_mappings = {}
     visited_so_far.add("")
     visited_so_far.update(sources)
     for url in sources:
-        visited_so_far = recursive_fetch(url, visited=visited_so_far)
+        visited_so_far, cur_url_mappings = recursive_fetch(url, visited=visited_so_far, cur_url_mappings=cur_url_mappings)
+    return visited_so_far, cur_url_mappings
 
 if __name__ == "__main__":
     Util.time_execution(main)

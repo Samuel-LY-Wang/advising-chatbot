@@ -29,10 +29,9 @@ def rebuild_embeddings(request: Request):
     expected_key = os.getenv("REBUILD_API_KEY")
     if api_key != expected_key:
         return {"status": "error", "message": "API Key is missing or invalid."}
-
     try:
-        bulk_sources_crawler.fetch_all()
-        save_chunks.generate_data_store()
+        urls = bulk_sources_crawler.fetch_all()
+        save_chunks.generate_data_store(urls=urls)
         chunks = save_chunks_to_db.load_chunks()
         save_chunks_to_db.save_to_chroma(chunks)
         return {"status": "success", "message": "Embeddings rebuilt successfully."}
