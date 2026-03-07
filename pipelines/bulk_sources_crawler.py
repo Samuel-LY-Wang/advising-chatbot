@@ -2,6 +2,7 @@
 from bs4 import BeautifulSoup
 from pathlib import Path
 from langchain_community.document_loaders import PyPDFLoader
+import json
 try:
     from pipelines.Errors import HTMLFetchError, InvalidURLError
     from pipelines import Util
@@ -75,14 +76,8 @@ def recursive_fetch(base_url, max_depth=2, visited=set(), cur_url_mappings = {})
         rev_url_mappings[clean_url(cur_url)] = cur_url
     return visited, rev_url_mappings
 
-def main():
-    visited_so_far = set()
-    cur_url_mappings = {}
-    visited_so_far.add("")
-    visited_so_far.update(SOURCES)
-    for url in SOURCES:
-        # print(url)
-        visited_so_far, cur_url_mappings = recursive_fetch(url, visited=visited_so_far, cur_url_mappings=cur_url_mappings)
+def main(sources=SOURCES):
+    fetch_all(sources)
 
 def fetch_all(sources=SOURCES):
     visited_so_far = set()
@@ -91,6 +86,8 @@ def fetch_all(sources=SOURCES):
     visited_so_far.update(sources)
     for url in sources:
         visited_so_far, cur_url_mappings = recursive_fetch(url, visited=visited_so_far, cur_url_mappings=cur_url_mappings)
+    with open("data/mappings/file-url-mappings.json", "w") as f:
+        json.dump(cur_url_mappings, f, indent=4)
     return visited_so_far, cur_url_mappings
 
 if __name__ == "__main__":

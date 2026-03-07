@@ -43,15 +43,15 @@ def generate_data_store(data_path=DATA_PATH, output_path=OUT_PATH, urls=None):
     print(doc_chunk_mapping)
     save_text(chunks, doc_chunk_mapping, output_path)
 
-def save_text(chunks: list[Document], doc_chunk_mapping: dict[int, str], output_path=OUT_PATH):
+def save_text(chunks: list[str], doc_chunk_mapping: dict[int, str], output_path=OUT_PATH):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     for i, chunk in enumerate(chunks):
         file_path = os.path.join(output_path, f"chunk_{i}.txt")
         with open(file_path, "w", encoding="utf-8") as f:
-            f.write(chunk.page_content)
+            f.write(chunk)
     if doc_chunk_mapping:
-        mapping_path = os.path.join(output_path, "doc_chunk_mapping.json")
+        mapping_path = "data/mappings/doc-chunk-mappings.json"
         with open(mapping_path, "w", encoding="utf-8") as f:
             json.dump(doc_chunk_mapping, f, indent=4)
     print(f"Saved {len(chunks)} chunks to {output_path}.")

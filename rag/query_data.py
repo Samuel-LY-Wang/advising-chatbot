@@ -6,7 +6,10 @@ from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_core.prompts import PromptTemplate
 from pathlib import Path
-from rag.doc_mapping_utils import *
+try:
+    from rag.doc_mapping_utils import *
+except ModuleNotFoundError:
+    from doc_mapping_utils import *
 
 CUR_PATH = Path.cwd()
 CHROMA_PATH = os.path.join(CUR_PATH, "data/chroma_db")
@@ -31,7 +34,7 @@ def search_DB(db, query_text: str, k: int = 3):
     results = db.similarity_search_with_relevance_scores(query_text, k=k)
     return results
 
-def answer_query(query_text: str, mapping=mapping):
+def answer_query(query_text: str, mapping=doc_mapping):
     db = prepare_DB()
 
     # Search the DB.
