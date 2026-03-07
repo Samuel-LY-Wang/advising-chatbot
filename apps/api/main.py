@@ -4,11 +4,9 @@ from fastapi.templating import Jinja2Templates
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-import json
-import numpy as np
-from pathlib import Path
 from rag.query_data import answer_query as answer
 from pipelines import bulk_sources_crawler, save_chunks, save_chunks_to_db, Util
+from rag.doc_mapping_utils import *
 import uvicorn
 
 app = FastAPI(title="Advising Chatbot RAG API")
@@ -25,7 +23,7 @@ def ask(q: str = Query(..., description="Your question")):
     print(ans)
     return {"question": q, "answer": str(ans), "sources": sources}
 
-@app.get("/rebuild_embeddings")
+@app.post("/rebuild_embeddings")
 def rebuild_embeddings(request: Request):
     api_key = request.headers.get("api-key")
     expected_key = os.getenv("REBUILD_API_KEY")

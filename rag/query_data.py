@@ -6,6 +6,7 @@ from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_core.prompts import PromptTemplate
 from pathlib import Path
+from rag.doc_mapping_utils import *
 
 CUR_PATH = Path.cwd()
 CHROMA_PATH = os.path.join(CUR_PATH, "data/chroma_db")
@@ -30,7 +31,7 @@ def search_DB(db, query_text: str, k: int = 3):
     results = db.similarity_search_with_relevance_scores(query_text, k=k)
     return results
 
-def answer_query(query_text: str):
+def answer_query(query_text: str, mapping=mapping):
     db = prepare_DB()
 
     # Search the DB.
@@ -51,6 +52,10 @@ def answer_query(query_text: str):
     response_text = llm.invoke(prompt).content
 
     sources = [doc.metadata.get("source", None) for doc, _score in results]
+    source_urls = []
+    for source in sources:
+        if source is not None:
+            source_urls.append(get_source_url(source, mapping))
     formatted_response = f"{response_text}".strip()
     return formatted_response, sources
 
@@ -83,7 +88,11 @@ def main():
     response_text = llm.invoke(prompt).content.strip()
 
     sources = [doc.metadata.get("source", None) for doc, _score in results]
-    formatted_response = f"Response: {response_text}\nSources: {sources}"
+    source_urls = []
+    for source in sources:
+        if source is not None:
+            source_urls.append(get_source_url(source))
+    formatted_response = f"Response: {response_text}\nSources: {source_urls}"
     print(formatted_response)
 
 

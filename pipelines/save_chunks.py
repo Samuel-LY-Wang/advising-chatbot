@@ -11,6 +11,7 @@ import os
 import shutil
 import nltk
 from pipelines import Util
+import json
 
 import warnings
 warnings.filterwarnings("ignore", message=r"libmagic is unavailable.*")
@@ -36,16 +37,20 @@ def main():
 
 def generate_data_store(data_path=DATA_PATH, output_path=OUT_PATH):
     documents = load_documents(data_path)
-    chunks = split_text(documents)
-    save_text(chunks, output_path)
+    chunks, doc_chunk_mapping = split_text(documents)
+    save_text(chunks, doc_chunk_mapping, output_path)
 
-def save_text(chunks: list[Document], output_path=OUT_PATH):
+def save_text(chunks: list[Document], doc_chunk_mapping: dict[int, str], output_path=OUT_PATH):
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     for i, chunk in enumerate(chunks):
         file_path = os.path.join(output_path, f"chunk_{i}.txt")
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(chunk.page_content)
+    if doc_chunk_mapping:
+        mapping_path = os.path.join(output_path, "doc_chunk_mapping.json")
+        with open(mapping_path, "w", encoding="utf-8") as f:
+            json.dump(doc_chunk_mapping, f, indent=4)
     print(f"Saved {len(chunks)} chunks to {output_path}.")
 
 def load_documents(data_path=DATA_PATH) -> list[Document]:
@@ -57,20 +62,31 @@ def load_documents(data_path=DATA_PATH) -> list[Document]:
 
 
 def split_text(documents: list[Document]):
+    doc_chunk_mapping = {}
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=300,
         chunk_overlap=100,
         length_function=len,
         add_start_index=True,
     )
-    chunks = text_splitter.split_documents(documents)
+    chunks=[]
+    num_added_chunks = 0
+    num_chunks = 0
+    for i, document in enumerate(documents):
+        url = document.metadata.get("source", f"document_{i}")
+        new_chunks = text_splitter.split_text(document.page_content)
+        num_added_chunks = len(new_chunks)
+        for j in range(num_added_chunks):
+            doc_chunk_mapping[num_chunks+j] = url
+        num_chunks += num_added_chunks
+        chunks.extend(new_chunks)
     print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
 
     # document = chunks[0]
     # print(document.page_content)
     # print(document.metadata)
 
-    return chunks
+    return chunks, doc_chunk_mapping
 
 if __name__ == "__main__":
     Util.time_execution(main) # ~167s (3 minutes)
