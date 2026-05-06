@@ -27,8 +27,13 @@ This project uses Ollama to run LLMs locally. Therefore, before running the code
 - ```bash
 ollama pull nomic-embed-text
 ```
+- To test, we use a more lightweight model like mistral:
 - ```bash
 ollama pull mistral
+```
+- Deployment uses the more powerful qwen3.5:27b model:
+- ```bash
+ollama pull qwen3.5:27b
 ```
 
 ## How to add additional sources

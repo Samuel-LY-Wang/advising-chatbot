@@ -2,7 +2,7 @@
     "recursive_depth": 1,
     "embed_model": "bge-m3",
     "rerank_model": "BAAI/bge-reranker-v2-m3",
-    "chat_model": "qwen3.5:27b",
+    "chat_model": "mistral",
     "chunk_size": 250,
     "chunk_overlap": 100,
     "chunks_to_retrieve": 40,
