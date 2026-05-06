@@ -1,13 +1,25 @@
-﻿import os, time, requests
+﻿import os, time, requests, sys
 from bs4 import BeautifulSoup
 from pathlib import Path
-from pipelines.source_crawler import fetch_and_strip
+try:
+    from pipelines.source_crawler import fetch_and_strip
+    from pipelines.Errors import HTMLFetchError, InvalidURLError
+    from pipelines import Util
+except ModuleNotFoundError:
+    from source_crawler import fetch_and_strip
+    from Errors import HTMLFetchError, InvalidURLError
+    import Util
 from langchain_community.document_loaders import PyPDFLoader
-from pipelines.Errors import HTMLFetchError, InvalidURLError
-from pipelines import Util
 
-OUT_DIR = Path("data/raw")
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from open_config import load_config
+
+config = load_config()
+
+cwd = os.getcwd()
+OUT_DIR = os.path.join(cwd, config["raw_data_path"])
+if (not os.path.exists(OUT_DIR)):
+    os.makedirs(OUT_DIR)
 strip=[5,9]
 
 HEADERS = {
@@ -16,11 +28,7 @@ HEADERS = {
                   "Chrome/120.0.0.0 Safari/537.36"
 }
 
-SOURCES = [
-    "https://content.cs.umass.edu/content/fall-2026-course-description",
-    "https://content.cs.umass.edu/content/spring-2026-course-descriptions",
-    "https://www.cics.umass.edu/academics/courses/prerequisite-catalog-and-credit-changes"
-]
+SOURCES = config["sources"]
 
 def get_key_from_val(d, val):
     for k, v in d.items():
@@ -29,7 +37,7 @@ def get_key_from_val(d, val):
     return None
 
 def save_text(cur_url, text):
-    out_path = OUT_DIR / (cur_url.replace("https://", "").replace("http://", "").replace("/", "_").replace(".", "-") + ".txt")
+    out_path = os.path.join(OUT_DIR, cur_url.replace("https://", "").replace("http://", "").replace("/", "_").replace(".", "-") + ".txt")
     if os.path.exists(out_path):
         return
     with open(out_path, "w", encoding="utf-8") as f:
@@ -73,7 +81,7 @@ def fetch_all(sources=SOURCES):
     visited_so_far.add("")
     visited_so_far.update(sources)
     for url in sources:
-        visited_so_far = recursive_fetch(url, visited=visited_so_far)
+        visited_so_far = recursive_fetch(url, visited=visited_so_far, max_depth=config["recursive_depth"])
 
 if __name__ == "__main__":
     Util.time_execution(main)

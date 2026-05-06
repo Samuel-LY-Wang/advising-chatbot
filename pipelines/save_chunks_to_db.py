@@ -4,10 +4,13 @@ from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
 from pipelines import Util
 
-import os
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from open_config import load_config
+config = load_config()
 CUR_PATH = os.getcwd()
-CHROMA_PATH = os.path.join(CUR_PATH, "data/chroma_db")
-DATA_PATH = os.path.join(CUR_PATH, "data/chunks")
+CHROMA_PATH = os.path.join(CUR_PATH, config["db_path"])
+DATA_PATH = os.path.join(CUR_PATH, config["chunk_path"])
 
 def save_to_chroma(chunks: list[Document], chroma_path=CHROMA_PATH):
     # Clear out the database first.
@@ -16,7 +19,7 @@ def save_to_chroma(chunks: list[Document], chroma_path=CHROMA_PATH):
 
     # Create a new DB from the documents.
     Chroma.from_documents(
-        chunks, OllamaEmbeddings(model="nomic-embed-text", base_url="http://localhost:11434"), persist_directory=chroma_path
+        chunks, OllamaEmbeddings(model=config["embed_model"], base_url="http://localhost:11434"), persist_directory=chroma_path
     )
     
     print(f"Saved {len(chunks)} chunks to {chroma_path}.")

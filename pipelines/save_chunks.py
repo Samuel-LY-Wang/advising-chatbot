@@ -8,9 +8,14 @@ from langchain_community.vectorstores import Chroma
 # import openai 
 from dotenv import load_dotenv
 import os
+import sys
 import shutil
 import nltk
 from pipelines import Util
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from open_config import load_config
+config = load_config()
 
 import warnings
 warnings.filterwarnings("ignore", message=r"libmagic is unavailable.*")
@@ -25,10 +30,11 @@ load_dotenv()
 # your .env file.
 # openai.api_key = os.environ['OPENAI_API_KEY']
 
-CUR_PATH = os.getcwd()
-OUT_PATH = os.path.join(CUR_PATH, "data/chunks")
-DATA_PATH = os.path.join(CUR_PATH, "data/raw")
+cwd = os.getcwd()
+OUT_PATH = os.path.join(cwd, config["chunk_path"])
+DATA_PATH = os.path.join(cwd, config["raw_data_path"])
 
+config = load_config()
 
 def main():
     generate_data_store()
@@ -58,8 +64,8 @@ def load_documents(data_path=DATA_PATH) -> list[Document]:
 
 def split_text(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=300,
-        chunk_overlap=100,
+        chunk_size=config["chunk_size"],
+        chunk_overlap=config["chunk_overlap"],
         length_function=len,
         add_start_index=True,
     )
