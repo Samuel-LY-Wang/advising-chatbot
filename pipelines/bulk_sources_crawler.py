@@ -17,10 +17,8 @@ HEADERS = {
 }
 
 SOURCES = [
+    "https://content.cs.umass.edu/content/fall-2026-course-description",
     "https://content.cs.umass.edu/content/spring-2026-course-descriptions",
-    "https://content.cs.umass.edu/content/fall-2025-course-description",
-    "https://content.cs.umass.edu/content/spring-2025-course-descriptions",
-    "https://content.cs.umass.edu/content/fall-2024-course-descriptions",
     "https://www.cics.umass.edu/academics/courses/prerequisite-catalog-and-credit-changes"
 ]
 

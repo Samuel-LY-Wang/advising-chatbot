@@ -11,6 +11,9 @@ from rag.query_data import answer_query as answer
 from pipelines import bulk_sources_crawler, save_chunks, save_chunks_to_db, Util
 import uvicorn
 
+import logging
+logging.getLogger("pypdf").setLevel(logging.ERROR)
+
 app = FastAPI(title="Advising Chatbot RAG API")
 templates = Jinja2Templates(directory="apps/api/templates")
 
@@ -25,7 +28,7 @@ def ask(q: str = Query(..., description="Your question")):
     print(ans)
     return {"question": q, "answer": str(ans), "sources": sources}
 
-@app.get("/rebuild_embeddings")
+@app.post("/rebuild_embeddings")
 def rebuild_embeddings(request: Request):
     api_key = request.headers.get("api-key")
     expected_key = os.getenv("REBUILD_API_KEY")

@@ -14,10 +14,11 @@ It uses a Retrieval-Augmented Generation (RAG) pipeline to answer questions abou
 
 ## Setup
 
+(with uv) \
 ```bash
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt
+uv venv --python 3.9
+source .venv/bin/activate
+uv pip install -r requirements.txt
 ```
 
 ## Local LLM Integration
