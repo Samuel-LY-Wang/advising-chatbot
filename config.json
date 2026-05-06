@@ -2,7 +2,7 @@
     "recursive_depth": 1,
     "embed_model": "bge-m3",
     "rerank_model": "BAAI/bge-reranker-v2-m3",
-    "chat_model": "mistral",
+    "chat_model": "qwen3.5:27b",
     "chunk_size": 250,
     "chunk_overlap": 100,
     "chunks_to_retrieve": 40,
@@ -10,6 +10,7 @@
     "raw_data_path": "data/raw",
     "chunk_path": "data/chunks",
     "db_path": "data/chroma_db",
+    "mappings_path": "data/mappings",
     "sources":  [
     "https://content.cs.umass.edu/content/fall-2026-course-description",
     "https://content.cs.umass.edu/content/spring-2026-course-descriptions",
