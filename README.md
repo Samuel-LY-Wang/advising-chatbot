@@ -29,7 +29,7 @@ ollama pull nomic-embed-text
 ```
 - To test, we use a more lightweight model like mistral:
 - ```bash
-ollama pull mistral
+ollama pull qwen3.5:9b
 ```
 - Deployment uses the more powerful qwen3.5:27b model:
 - ```bash
