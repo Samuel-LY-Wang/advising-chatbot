@@ -32,22 +32,23 @@ load_dotenv()
 
 cwd = os.getcwd()
 OUT_PATH = os.path.join(cwd, config["chunk_path"])
+if (not os.path.exists(OUT_PATH)):
+    os.makedirs(OUT_PATH)
 DATA_PATH = os.path.join(cwd, config["raw_data_path"])
+MAPPING_PATH = os.path.join(cwd, config["mappings_path"])
+MAPPING_FILE = os.path.join(MAPPING_PATH, config["chunk_mapping_file"])
 
 config = load_config()
 
 def main():
     generate_data_store()
 
-
 def generate_data_store(data_path=DATA_PATH, output_path=OUT_PATH):
     documents = load_documents(data_path)
-    chunks = split_text(documents)
+    chunks = split_and_save_text(documents)
     save_text(chunks, output_path)
 
 def save_text(chunks: list[Document], output_path=OUT_PATH):
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
     for i, chunk in enumerate(chunks):
         file_path = os.path.join(output_path, f"chunk_{i}.txt")
         with open(file_path, "w", encoding="utf-8") as f:
@@ -62,15 +63,24 @@ def load_documents(data_path=DATA_PATH) -> list[Document]:
     return documents
 
 
-def split_text(documents: list[Document]):
+def split_and_save_text(documents: list[Document]):
+    mapping = {}
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=config["chunk_size"],
         chunk_overlap=config["chunk_overlap"],
         length_function=len,
         add_start_index=True,
     )
+    num_chunks = 0
+    for doc in documents:
+        doc_chunks = text_splitter.split_text(doc.page_content)
+        for i in range(len(doc_chunks)):
+            mapping[os.path.join(OUT_PATH, f"chunk_{num_chunks + i}.txt")] = doc.metadata.get("source", None)
+        num_chunks += len(doc_chunks)
     chunks = text_splitter.split_documents(documents)
     print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
+
+    Util.save_json(MAPPING_FILE, mapping)
 
     # document = chunks[0]
     # print(document.page_content)

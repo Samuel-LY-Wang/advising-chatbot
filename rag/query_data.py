@@ -7,12 +7,16 @@ from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_core.prompts import PromptTemplate
 from pathlib import Path
 from sentence_transformers import CrossEncoder
+try:
+    from rag import reverse_map
+except ModuleNotFoundError:
+    import reverse_map
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from open_config import load_config
 config = load_config()
 
-CUR_PATH = Path.cwd()
+CUR_PATH = config["cwd"]
 CHROMA_PATH = os.path.join(CUR_PATH, config["db_path"])
 
 PROMPT_TEMPLATE = """
@@ -43,12 +47,15 @@ def answer_query(query_text: str):
 
     # Search the DB.
     results = search_DB(db, query_text, k=config["chunks_to_retrieve"])
+    # print(f"Pre-rerank: {results}")
+    results = re_ranker(query_text, results, num_to_return=config["chunks_to_keep"])
+    # print(f"Post-rerank: {results}")
     # print(results)
-    if len(results) == 0:
-        return "Unable to find matching results.", None
     reranked_results = re_ranker(query_text, results, num_to_return=config["chunks_to_keep"])
 
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in reranked_results])
+    # with open("test/context.txt", "w", encoding="utf-8") as f:
+    #     f.write(context_text)
     prompt_template = prompt_template = PromptTemplate(
         template=PROMPT_TEMPLATE,
         input_variables=["length", "topic", "audience"]
@@ -59,7 +66,7 @@ def answer_query(query_text: str):
     
     response_text = llm.invoke(prompt).content
 
-    sources = [doc.metadata.get("source", None) for doc, _score in reranked_results]
+    sources = [reverse_map.get_url_from_chunk(doc) for doc, _score in reranked_results]
     formatted_response = f"{response_text}".strip()
     return formatted_response, sources
 
@@ -81,29 +88,9 @@ def main():
     args = parser.parse_args()
     query_text = args.query_text
 
-    db = prepare_DB()
-
-    # Search the DB.
-    results = search_DB(db, query_text, k=3)
-    if len(results) == 0 or results[0][1] < 0.7:
-        print("Unable to find matching results.")
-        return
-
-    context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
-    prompt_template = prompt_template = PromptTemplate(
-        template=PROMPT_TEMPLATE,
-        input_variables=["length", "topic", "audience"]
-    )
-    prompt = prompt_template.format(context=context_text, question=query_text)
-    # print(prompt)
-
-    llm = ChatOllama(model=config["chat_model"])
-    
-    response_text = llm.invoke(prompt).content.strip()
-
-    sources = [doc.metadata.get("source", None) for doc, _score in results]
-    formatted_response = f"Response: {response_text}\nSources: {sources}"
-    print(formatted_response)
+    res, sources = answer_query(query_text)
+    print(f"Answer: {res}")
+    print(f"Sources: {sources}")
 
 
 if __name__ == "__main__":

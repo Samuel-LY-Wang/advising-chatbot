@@ -8,9 +8,13 @@ import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from open_config import load_config
 config = load_config()
-CUR_PATH = os.getcwd()
+CUR_PATH = config["cwd"]
 CHROMA_PATH = os.path.join(CUR_PATH, config["db_path"])
+if (not os.path.exists(CHROMA_PATH)):
+    os.makedirs(CHROMA_PATH)
 DATA_PATH = os.path.join(CUR_PATH, config["chunk_path"])
+if (not os.path.exists(DATA_PATH)):
+    os.makedirs(DATA_PATH)
 
 def save_to_chroma(chunks: list[Document], chroma_path=CHROMA_PATH):
     # Clear out the database first.

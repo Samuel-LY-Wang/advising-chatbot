@@ -3,7 +3,7 @@
     "embed_model": "bge-m3",
     "rerank_model": "BAAI/bge-reranker-v2-m3",
     "chat_model": "qwen3.5:9b",
-    "chunk_size": 250,
+    "chunk_size": 300,
     "chunk_overlap": 100,
     "chunks_to_retrieve": 40,
     "chunks_to_keep": 5,
@@ -11,6 +11,8 @@
     "chunk_path": "data/chunks",
     "db_path": "data/chroma_db",
     "mappings_path": "data/mappings",
+    "doc_mapping_file": "link_file_mapping.json",
+    "chunk_mapping_file": "chunk_file_mapping.json",
     "sources":  [
     "https://content.cs.umass.edu/content/fall-2026-course-description",
     "https://content.cs.umass.edu/content/spring-2026-course-descriptions",
