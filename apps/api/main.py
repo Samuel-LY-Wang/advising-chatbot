@@ -9,6 +9,7 @@ import numpy as np
 from pathlib import Path
 from rag.query_data import answer_query as answer
 from pipelines import rebuild_database, Util
+import URL_utils
 import uvicorn
 import traceback
 
@@ -27,11 +28,9 @@ def home(request: Request):
 
 @app.get("/ask")
 def ask(q: str = Query(..., description="Your question")):
-    ans = Util.time_execution(lambda: answer(q))
-    print(ans)
-    ans, sources = ans # Just see how long each query takes on laptop
-    print(ans)
-    return {"question": q, "answer": str(ans), "sources": sources}
+    ans, sources = Util.time_execution(lambda: answer(q))
+    source_links = [URL_utils.to_html_link(url, f"Source {i+1}") for i, url in enumerate(sources)]
+    return {"question": q, "answer": str(ans), "sources": source_links}
 
 @app.post("/rebuild_db")
 def rebuild_db(request: Request):

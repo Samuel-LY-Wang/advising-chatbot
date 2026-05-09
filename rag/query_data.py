@@ -20,13 +20,14 @@ CUR_PATH = config["cwd"]
 CHROMA_PATH = os.path.join(CUR_PATH, config["db_path"])
 
 PROMPT_TEMPLATE = """
-Answer the question based only on the following context:
+Answer the question based only on the following context and your own reasoning. If the question cannot be answered by the given context, return a blank response:
 
 {context}
 
 ---
 
 Answer the question based on the above context: {question}
+If the answer does not appear in the context
 """
 
 rerank_model = config["rerank_model"]
@@ -64,7 +65,10 @@ def answer_query(query_text: str):
 
     llm = ChatOllama(model=config["chat_model"])
     
-    response_text = llm.invoke(prompt).content
+    response_text = llm.invoke(prompt).content.strip()
+
+    if (response_text == ""):
+        return "I couldn't find any information on that", []
 
     sources = [reverse_map.get_url_from_chunk(doc) for doc, _score in reranked_results]
     formatted_response = f"{response_text}".strip()

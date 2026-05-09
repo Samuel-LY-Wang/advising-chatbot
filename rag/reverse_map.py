@@ -9,6 +9,7 @@ if (not os.path.exists(MAPPING_PATH)):
     raise FileNotFoundError(f"Mappings path {MAPPING_PATH} does not exist.")
 CHUNK_MAPPING_FILE = os.path.join(MAPPING_PATH, config["chunk_mapping_file"])
 DOC_MAPPING_FILE = os.path.join(MAPPING_PATH, config["doc_mapping_file"])
+CHUNK_PATH = os.path.join(config["cwd"], config["chunk_path"])
 
 chunk_mappings = json.load(open(CHUNK_MAPPING_FILE, "r", encoding="utf-8"))
 doc_mappings = json.load(open(DOC_MAPPING_FILE, "r", encoding="utf-8"))
@@ -20,7 +21,7 @@ def get_url_from_chunk(chunk: Document) -> str:
     if chunk_id is None:
         print("Chunk is missing source metadata.")
         return ""
-    doc_id = chunk_mappings.get(os.path.join(cwd, chunk_id), None)
+    doc_id = chunk_mappings.get(os.path.join(CHUNK_PATH, chunk_id), None)
     if doc_id is None:
         print("Document ID not found for chunk.")
         return ""
