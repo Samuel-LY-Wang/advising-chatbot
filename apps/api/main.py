@@ -12,6 +12,7 @@ from pipelines import rebuild_database, Util
 import URL_utils
 import uvicorn
 import traceback
+import markdown
 
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings, ChatOllama
@@ -29,8 +30,9 @@ def home(request: Request):
 @app.get("/ask")
 def ask(q: str = Query(..., description="Your question")):
     ans, sources = Util.time_execution(lambda: answer(q))
-    source_links = [URL_utils.to_html_link(url, f"Source {i+1}") for i, url in enumerate(sources)]
-    return {"question": q, "answer": str(ans), "sources": source_links}
+    print(ans)
+    source_links = [URL_utils.to_html_link(url, str(i+1)) for i, url in enumerate(sources)]
+    return {"question": q, "answer": markdown.markdown(ans), "sources": source_links}
 
 @app.post("/rebuild_db")
 def rebuild_db(request: Request):

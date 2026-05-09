@@ -20,7 +20,8 @@ CUR_PATH = config["cwd"]
 CHROMA_PATH = os.path.join(CUR_PATH, config["db_path"])
 
 PROMPT_TEMPLATE = """
-Answer the question based only on the following context and your own reasoning. If the question cannot be answered by the given context, return a blank response:
+Answer the question based only on the provided context and your own reasoning. If the question cannot be answered by these means, return a blank string. Always use all available information to provide the best answer. Do not make up information that is not in the context. Please format the output as valid markdown.
+Below is the context provided:
 
 {context}
 
