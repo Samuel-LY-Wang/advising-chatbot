@@ -11,7 +11,11 @@ import os
 import sys
 import shutil
 import nltk
-from pipelines import Util
+try:
+    from pipelines import Util
+except ModuleNotFoundError:
+    import Util
+import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from open_config import load_config
@@ -19,7 +23,6 @@ config = load_config()
 
 import warnings
 warnings.filterwarnings("ignore", message=r"libmagic is unavailable.*")
-
 
 nltk.download('punkt_tab')
 nltk.download('averaged_perceptron_tagger_eng')
@@ -86,7 +89,7 @@ def split_and_save_text(documents: list[Document]):
     # print(document.page_content)
     # print(document.metadata)
 
-    return chunks
+    return chunks, doc_chunk_mapping
 
 if __name__ == "__main__":
     Util.time_execution(main) # ~167s (3 minutes)

@@ -2,7 +2,10 @@ import shutil
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
-from pipelines import Util
+try:
+    from pipelines import Util
+except ModuleNotFoundError:
+    import Util
 
 import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))

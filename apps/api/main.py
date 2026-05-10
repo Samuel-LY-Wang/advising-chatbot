@@ -4,9 +4,6 @@ from fastapi.templating import Jinja2Templates
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-import json
-import numpy as np
-from pathlib import Path
 from rag.query_data import answer_query as answer
 from pipelines import rebuild_database, Util
 import URL_utils

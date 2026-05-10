@@ -1,4 +1,4 @@
-﻿import os, sys
+import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from open_config import load_config
 
@@ -30,6 +30,9 @@ HEADERS = {
 }
 
 SOURCES = config["sources"]
+
+def clean_url(url):
+    return url.replace("https://", "").replace("http://", "").replace("/", "_").replace(".", "-")+".txt"
 
 def get_key_from_val(d, val):
     for k, v in d.items():
@@ -84,6 +87,7 @@ def fetch_all(sources=SOURCES):
         pass # clear error file
     mapping = {}
     visited_so_far = set()
+    cur_url_mappings = {}
     visited_so_far.add("")
     visited_so_far.update(sources)
     for url in sources:
