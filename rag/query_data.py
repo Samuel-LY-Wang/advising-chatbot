@@ -52,12 +52,17 @@ def answer_query(query_text: str, debug=False):
     db = Util.time_execution(prepare_DB, out="DB preparation time: ")
 
     # Search the DB.
-    results = Util.time_execution(lambda: search_DB(db, query_text, k=config["chunks_to_retrieve"]), out="DB search time: ")
     if debug:
+        results = Util.time_execution(lambda: search_DB(db, query_text, k=config["chunks_to_retrieve"]), out="DB search time: ")
         print(f"Initial search results (pre-rerank): {results}")
-    results = Util.time_execution(lambda: re_ranker(query_text, results, num_to_return=config["chunks_to_keep"]), out="Rerank time: ")
+    else:
+        results = search_DB(db, query_text, k=config["chunks_to_retrieve"])
+
     if debug:
+        results = Util.time_execution(lambda: re_ranker(query_text, results, num_to_return=config["chunks_to_keep"]), out="Rerank time: ")
         print(f"Reranked results: {results}")
+    else:
+        results = re_ranker(query_text, results, num_to_return=config["chunks_to_keep"])
     # print(results)
 
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])

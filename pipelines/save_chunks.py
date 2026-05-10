@@ -44,27 +44,36 @@ config = load_config()
 def main():
     generate_data_store()
 
-def generate_data_store(data_path=DATA_PATH, output_path=OUT_PATH):
-    documents = load_documents(data_path)
-    chunks = split_and_save_text(documents)
-    save_text(chunks, output_path)
+def generate_data_store(data_path=DATA_PATH, output_path=OUT_PATH, mapping_path=MAPPING_FILE, verbose=False):
+    documents = load_documents(data_path, verbose=verbose)
+    chunks = split_and_save_text(documents, mapping_path=mapping_path, verbose=verbose)
+    save_text(chunks, output_path, verbose=verbose)
 
-def save_text(chunks: list[Document], output_path=OUT_PATH):
+def save_text(chunks: list[Document], output_path=OUT_PATH, verbose=False):
     for i, chunk in enumerate(chunks):
         file_path = os.path.join(output_path, f"chunk_{i}.txt")
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(chunk.page_content)
-    # print(f"Saved {len(chunks)} chunks to {output_path}.")
+    if verbose:
+        print(f"Saved {len(chunks)} chunks to {output_path}.")
 
-def load_documents(data_path=DATA_PATH) -> list[Document]:
+def load_documents(data_path=DATA_PATH, verbose=False) -> list[Document]:
+    '''
+    Loads documents from raw text files in data_path using DirectoryLoader.
+    Args:
+        data_path (str): The directory path where raw text files are located. (defaults to DATA_PATH from config)
+        verbose (bool): If True, prints the number of documents loaded and the data path. (defaults to False)
+    Returns:
+        list[Document]: A list of Document objects loaded from the raw text files.
+    '''
     loader = DirectoryLoader(data_path, glob="*.txt", recursive=True)
-    ## loader = PyPDFLoader(DATA_PATH + "/the-hundred-page-language-models-book-hands-on-with-pytorch.pdf")
     documents = loader.load()
-    # print(f"Loaded {len(documents)} documents from {data_path}.")
+    if verbose:
+        print(f"Loaded {len(documents)} documents from {data_path}.")
     return documents
 
 
-def split_and_save_text(documents: list[Document]):
+def split_and_save_text(documents: list[Document], mapping_path=MAPPING_FILE, verbose=False) -> list[Document]:
     mapping = {}
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=config["chunk_size"],
@@ -79,13 +88,10 @@ def split_and_save_text(documents: list[Document]):
             mapping[os.path.join(OUT_PATH, f"chunk_{num_chunks + i}.txt")] = doc.metadata.get("source", None)
         num_chunks += len(doc_chunks)
     chunks = text_splitter.split_documents(documents)
-    # print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
+    if verbose:
+        print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
 
-    Util.save_json(MAPPING_FILE, mapping)
-
-    # document = chunks[0]
-    # print(document.page_content)
-    # print(document.metadata)
+    Util.save_json(mapping_path, mapping)
 
     return chunks
 

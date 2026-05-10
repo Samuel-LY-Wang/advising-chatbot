@@ -27,12 +27,6 @@ HEADERS = config["header"]
 
 SOURCES = config["sources"]
 
-def get_key_from_val(d, val):
-    for k, v in d.items():
-        if v == val:
-            return k
-    return None
-
 def save_text(cur_url, text):
     # saves text to file and returns file path
     out_path = os.path.join(OUT_DIR, Util.clean_url(cur_url) + ".txt")

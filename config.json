@@ -1,5 +1,6 @@
 {
     "recursive_depth": 2,
+    "ignore_directories": ["mailto:", "tel:", "youtube.com", "youtu.be", "twitter.com", "facebook.com", "linkedin.com", "arxiv.org", ".pptx"],
     "embed_model": "bge-m3",
     "rerank_model": "BAAI/bge-reranker-v2-m3",
     "chat_model": "qwen3.5:4b",

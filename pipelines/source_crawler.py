@@ -9,7 +9,12 @@ from urllib.parse import urljoin, urlparse
 import logging
 logging.getLogger("pypdf").setLevel(logging.ERROR) # silence all warnings about invalid markers or wrong-pointing objects (common but completely irrelevant)
 
-ignore_domains = set(["mailto:", "tel:", "youtube.com", "youtu.be", "twitter.com", "facebook.com", "linkedin.com", "arxiv.org", ".pptx"])
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from open_config import load_config
+config = load_config()
+
+ignore_domains = set(config["ignore_domains"])
 
 def is_valid_url(url):
     """Check if URL is valid."""
@@ -88,13 +93,8 @@ def fetch_and_strip(url, headers, remove_selectors=None, remove_tag_names=None, 
 if __name__ == "__main__":
     url = "https://openreview.net/pdf?id=4R0pugRyN5"
     # tweak strip_lines_from_edges if header/footer are not removed by selectors
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                      "AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/120.0.0.0 Safari/537.36"
-    }
+    headers = config["header"]
     cleaned, links = fetch_and_strip(url, headers=headers, strip_from_top=5, strip_from_bottom=9)
-
 
     with open("test/test_output.txt", "w") as f:
         f.write(cleaned)

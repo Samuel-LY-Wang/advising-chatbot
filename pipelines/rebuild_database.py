@@ -9,11 +9,17 @@ except ModuleNotFoundError:
     from save_chunks_to_db import load_chunks, save_to_chroma
     from Util import time_execution
 
-def main():
-    time_execution(fetch_all, out="Webscraping time: ")
-    time_execution(generate_data_store, out="Chunk generation time: ")
-    chunks = time_execution(load_chunks, out="Chunk loading time: ")
-    time_execution(lambda: save_to_chroma(chunks), out="DB saving time: ")
+def main(verbose=False):
+    if verbose:
+        time_execution(fetch_all, out="Webscraping time: ")
+        time_execution(generate_data_store, out="Chunk generation time: ")
+        chunks = time_execution(load_chunks, out="Chunk loading time: ")
+        time_execution(lambda: save_to_chroma(chunks), out="DB saving time: ")
+    else:
+        fetch_all()
+        generate_data_store()
+        chunks = load_chunks()
+        save_to_chroma(chunks)
 
 if __name__ == "__main__":
     main()

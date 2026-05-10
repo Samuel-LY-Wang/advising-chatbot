@@ -19,19 +19,19 @@ DATA_PATH = os.path.join(CUR_PATH, config["chunk_path"])
 if (not os.path.exists(DATA_PATH)):
     os.makedirs(DATA_PATH)
 
-def save_to_chroma(chunks: list[Document], chroma_path=CHROMA_PATH):
-    # Clear out the database first.
+def save_to_chroma(chunks: list[Document], chroma_path=CHROMA_PATH, verbose=False):
+    # Clear existing DB (if any)
     if os.path.exists(chroma_path):
         shutil.rmtree(chroma_path)
 
-    # Create a new DB from the documents.
+    # Create new DB
     Chroma.from_documents(
         chunks, OllamaEmbeddings(model=config["embed_model"], base_url="http://localhost:11434"), persist_directory=chroma_path
     )
-    
-    # print(f"Saved {len(chunks)} chunks to {chroma_path}.")
+    if verbose:
+        print(f"Saved {len(chunks)} chunks to {chroma_path}.")
 
-def load_chunks(data_path = DATA_PATH) -> list[Document]:
+def load_chunks(data_path = DATA_PATH, verbose=False) -> list[Document]:
     chunks = []
     for filename in os.listdir(data_path):
         if filename.endswith(".txt"):
@@ -40,12 +40,13 @@ def load_chunks(data_path = DATA_PATH) -> list[Document]:
                 content = f.read()
                 chunk = Document(page_content=content, metadata={"source": filename})
                 chunks.append(chunk)
-    # print(f"Loaded {len(chunks)} chunks from {data_path}.")
+    if verbose:
+        print(f"Loaded {len(chunks)} chunks from {data_path}.")
     return chunks
 
 def main():
-    chunks = Util.time_execution(load_chunks) # ~11.85s to load all chunks
-    Util.time_execution(lambda: save_to_chroma(chunks)) # 1000 chunks ~ 16.5s, all chunks ~ 45 min
+    chunks = Util.time_execution(lambda: load_chunks(verbose=True)) # ~11.85s to load all chunks
+    Util.time_execution(lambda: save_to_chroma(chunks, verbose=True)) # 1000 chunks ~ 16.5s, all chunks ~ 45 min
 
 if __name__ == "__main__":
     main()
