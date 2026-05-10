@@ -9,13 +9,11 @@ from langchain_community.vectorstores import Chroma
 from dotenv import load_dotenv
 import os
 import sys
-import shutil
 import nltk
 try:
     from pipelines import Util
 except ModuleNotFoundError:
     import Util
-import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from open_config import load_config
@@ -89,7 +87,7 @@ def split_and_save_text(documents: list[Document]):
     # print(document.page_content)
     # print(document.metadata)
 
-    return chunks, doc_chunk_mapping
+    return chunks
 
 if __name__ == "__main__":
     Util.time_execution(main) # ~167s (3 minutes)
