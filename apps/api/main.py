@@ -11,9 +11,6 @@ import uvicorn
 import traceback
 import markdown
 
-from langchain_chroma import Chroma
-from langchain_ollama import OllamaEmbeddings, ChatOllama
-
 import logging
 logging.getLogger("pypdf").setLevel(logging.ERROR)
 
