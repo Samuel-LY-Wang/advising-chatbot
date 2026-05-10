@@ -17,5 +17,8 @@
     "sources":  [
     "https://content.cs.umass.edu/content/fall-2026-course-description",
     "https://content.cs.umass.edu/content/spring-2026-course-descriptions",
-    "https://www.cics.umass.edu/academics/courses/prerequisite-catalog-and-credit-changes"]
+    "https://www.cics.umass.edu/academics/courses/prerequisite-catalog-and-credit-changes"],
+    "header": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
 }
