@@ -14,7 +14,7 @@ It uses a Retrieval-Augmented Generation (RAG) pipeline to answer questions abou
 
 ## Setup
 
-(with uv) \
+(with uv) \\
 ```bash
 uv venv --python 3.9
 source .venv/bin/activate
