@@ -21,6 +21,7 @@ if (not os.path.exists(MAPPING_PATH)):
     os.makedirs(MAPPING_PATH)
 MAPPING_FILE = os.path.join(MAPPING_PATH, config["doc_mapping_file"])
 strip=[5,9]
+FETCH_ERROR_FILE = os.path.join(config["cwd"], config["HTTP_fetch_error_file"])
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -69,13 +70,18 @@ def recursive_fetch(base_url, mapping = {}, max_depth=2, visited=set()):
             except InvalidURLError:
                 pass
             except Exception as e:
-                print(f"Unexpected error fetching {url}: {e}")
+                # moved to file for clean console output
+                with open(FETCH_ERROR_FILE, "a", encoding="utf-8") as f:
+                    f.write(f"{url}\n")
+                # print(f"Error fetching {url}: {e}") # uncomment for debug purposes
     return visited, mapping
 
 def main():
     fetch_all()
 
 def fetch_all(sources=SOURCES):
+    with open(FETCH_ERROR_FILE, "w", encoding="utf-8") as f:
+        pass # clear error file
     mapping = {}
     visited_so_far = set()
     visited_so_far.add("")
@@ -84,7 +90,7 @@ def fetch_all(sources=SOURCES):
         # print(url)
         visited_so_far, mapping = recursive_fetch(url, mapping=mapping, visited=visited_so_far, max_depth=config["recursive_depth"])
     Util.save_json(MAPPING_FILE, mapping)
-    print(f"Visited {len(visited_so_far)} URLs.")
+    # print(f"Visited {len(visited_so_far)} URLs.")
 
 if __name__ == "__main__":
     Util.time_execution(main)

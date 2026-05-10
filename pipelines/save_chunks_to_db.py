@@ -26,7 +26,7 @@ def save_to_chroma(chunks: list[Document], chroma_path=CHROMA_PATH):
         chunks, OllamaEmbeddings(model=config["embed_model"], base_url="http://localhost:11434"), persist_directory=chroma_path
     )
     
-    print(f"Saved {len(chunks)} chunks to {chroma_path}.")
+    # print(f"Saved {len(chunks)} chunks to {chroma_path}.")
 
 def load_chunks(data_path = DATA_PATH) -> list[Document]:
     chunks = []
@@ -37,7 +37,7 @@ def load_chunks(data_path = DATA_PATH) -> list[Document]:
                 content = f.read()
                 chunk = Document(page_content=content, metadata={"source": filename})
                 chunks.append(chunk)
-    print(f"Loaded {len(chunks)} chunks from {data_path}.")
+    # print(f"Loaded {len(chunks)} chunks from {data_path}.")
     return chunks
 
 def main():

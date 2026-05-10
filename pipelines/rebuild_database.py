@@ -10,10 +10,10 @@ except ModuleNotFoundError:
     from Util import time_execution
 
 def main():
-    time_execution(fetch_all)
-    time_execution(generate_data_store)
-    chunks = time_execution(load_chunks)
-    time_execution(lambda: save_to_chroma(chunks))
+    time_execution(fetch_all, out="Webscraping time: ")
+    time_execution(generate_data_store, out="Chunk generation time: ")
+    chunks = time_execution(load_chunks, out="Chunk loading time: ")
+    time_execution(lambda: save_to_chroma(chunks), out="DB saving time: ")
 
 if __name__ == "__main__":
     main()

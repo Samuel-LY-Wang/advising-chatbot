@@ -29,7 +29,8 @@ def home(request: Request):
 
 @app.get("/ask")
 def ask(q: str = Query(..., description="Your question")):
-    ans, sources = Util.time_execution(lambda: answer(q))
+    print("Received question:", q)
+    ans, sources = Util.time_execution(lambda: answer(q, debug=False), out="Answer time: ")
     print(ans)
     source_links = [URL_utils.to_html_link(url, str(i+1)) for i, url in enumerate(sources)]
     return {"question": q, "answer": markdown.markdown(ans), "sources": source_links}

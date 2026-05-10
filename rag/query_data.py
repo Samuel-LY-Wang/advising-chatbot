@@ -1,5 +1,5 @@
 import argparse
-import os, sys
+import os, sys, time
 from dotenv import load_dotenv
 # from dataclasses import dataclass
 from langchain_chroma import Chroma
@@ -14,13 +14,17 @@ except ModuleNotFoundError:
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from open_config import load_config
+from pipelines import Util
 config = load_config()
 
 CUR_PATH = config["cwd"]
 CHROMA_PATH = os.path.join(CUR_PATH, config["db_path"])
 
 PROMPT_TEMPLATE = """
-Answer the question based only on the provided context and your own reasoning. If the question cannot be answered by these means, return a blank string. Always use all available information to provide the best answer. Do not make up information that is not in the context. Please format the output as valid markdown.
+Answer the question based only on the provided context and your own reasoning. If the question cannot be answered from the given context combined with your reasoning, return an empty string as your response (do not include the quotation marks).
+Always use all available information to provide the best answer. Do not make up information that is not in the context. If you use information from the provided context, please cite the source using [number] notation, where the number corresponds to the source's position in the provided context. For example, if you use information from the first and third sources in the context, you would cite them as [1] and [3] respectively in your answer.
+The provided context is delimited by triple dashes (---). Each source in the context is separated by these dashes. The position of each source in the context corresponds to its citation number.
+Please format the output as valid markdown.
 Below is the context provided:
 
 {context}
@@ -44,18 +48,23 @@ def search_DB(db: Chroma, query_text: str, k: int = 3):
     results = db.similarity_search_with_relevance_scores(query_text, k=k)
     return results
 
-def answer_query(query_text: str):
-    db = prepare_DB()
+def answer_query(query_text: str, debug=False):
+    db = Util.time_execution(prepare_DB, out="DB preparation time: ")
 
     # Search the DB.
-    results = search_DB(db, query_text, k=config["chunks_to_retrieve"])
-    # print(f"Pre-rerank: {results}")
-    results = re_ranker(query_text, results, num_to_return=config["chunks_to_keep"])
-    # print(f"Post-rerank: {results}")
+    results = Util.time_execution(lambda: search_DB(db, query_text, k=config["chunks_to_retrieve"]), out="DB search time: ")
+    if debug:
+        print(f"Initial search results (pre-rerank): {results}")
+    results = Util.time_execution(lambda: re_ranker(query_text, results, num_to_return=config["chunks_to_keep"]), out="Rerank time: ")
+    if debug:
+        print(f"Reranked results: {results}")
     # print(results)
-    reranked_results = re_ranker(query_text, results, num_to_return=config["chunks_to_keep"])
 
-    context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in reranked_results])
+    context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
+    if debug:
+        print(f"Context text for LLM:\n{context_text}")
+        with open("test/context.txt", "w", encoding="utf-8") as f:
+            f.write(context_text)
     # with open("test/context.txt", "w", encoding="utf-8") as f:
     #     f.write(context_text)
     prompt_template = prompt_template = PromptTemplate(
@@ -66,12 +75,12 @@ def answer_query(query_text: str):
 
     llm = ChatOllama(model=config["chat_model"])
     
-    response_text = llm.invoke(prompt).content.strip()
+    response_text = Util.time_execution(lambda: llm.invoke(prompt).content.strip(), out="LLM response time: ")
 
     if (response_text == ""):
         return "I couldn't find any information on that", []
 
-    sources = [reverse_map.get_url_from_chunk(doc) for doc, _score in reranked_results]
+    sources = [reverse_map.get_url_from_chunk(doc) for doc, _score in results]
     formatted_response = f"{response_text}".strip()
     return formatted_response, sources
 

@@ -1,12 +1,12 @@
 import time
 import json
 
-def time_execution(func):
+def time_execution(func, out="Execution time: "):
     start_time = time.time()
-    out = func()
+    result = func()
     end_time = time.time()
-    print(f"Execution time: {end_time - start_time} seconds")
-    return out
+    print(f"{out}{end_time - start_time} seconds")
+    return result
 
 def clean_url(url):
     # converts URL to safe filename (by removing the header and replacing problematic characters)

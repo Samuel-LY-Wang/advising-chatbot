@@ -53,13 +53,13 @@ def save_text(chunks: list[Document], output_path=OUT_PATH):
         file_path = os.path.join(output_path, f"chunk_{i}.txt")
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(chunk.page_content)
-    print(f"Saved {len(chunks)} chunks to {output_path}.")
+    # print(f"Saved {len(chunks)} chunks to {output_path}.")
 
 def load_documents(data_path=DATA_PATH) -> list[Document]:
     loader = DirectoryLoader(data_path, glob="*.txt", recursive=True)
     ## loader = PyPDFLoader(DATA_PATH + "/the-hundred-page-language-models-book-hands-on-with-pytorch.pdf")
     documents = loader.load()
-    print(f"Loaded {len(documents)} documents from {data_path}.")
+    # print(f"Loaded {len(documents)} documents from {data_path}.")
     return documents
 
 
@@ -78,7 +78,7 @@ def split_and_save_text(documents: list[Document]):
             mapping[os.path.join(OUT_PATH, f"chunk_{num_chunks + i}.txt")] = doc.metadata.get("source", None)
         num_chunks += len(doc_chunks)
     chunks = text_splitter.split_documents(documents)
-    print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
+    # print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
 
     Util.save_json(MAPPING_FILE, mapping)
 
