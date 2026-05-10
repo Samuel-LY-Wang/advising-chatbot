@@ -14,9 +14,9 @@ langchain
 langchain-community
 jq
 pypdf
-openai
 nltk
 unstructured
 chromadb
 langchain-ollama
 langchain-chroma
+markdown

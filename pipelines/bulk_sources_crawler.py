@@ -1,20 +1,27 @@
-﻿import os, time, requests
-from bs4 import BeautifulSoup
-from pathlib import Path
-from langchain_community.document_loaders import PyPDFLoader
-import json
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from open_config import load_config
+
 try:
+    from pipelines.source_crawler import fetch_and_strip
     from pipelines.Errors import HTMLFetchError, InvalidURLError
     from pipelines import Util
-    from pipelines.source_crawler import fetch_and_strip
 except ModuleNotFoundError:
+    from source_crawler import fetch_and_strip
     from Errors import HTMLFetchError, InvalidURLError
     import Util
-    from source_crawler import fetch_and_strip
 
-OUT_DIR = Path("data/raw")
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+config = load_config()
+
+OUT_DIR = os.path.join(config["cwd"], config["raw_data_path"])
+if (not os.path.exists(OUT_DIR)):
+    os.makedirs(OUT_DIR)
+MAPPING_PATH = os.path.join(config["cwd"], config["mappings_path"])
+if (not os.path.exists(MAPPING_PATH)):
+    os.makedirs(MAPPING_PATH)
+MAPPING_FILE = os.path.join(MAPPING_PATH, config["doc_mapping_file"])
 strip=[5,9]
+FETCH_ERROR_FILE = os.path.join(config["cwd"], config["HTTP_fetch_error_file"])
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -22,13 +29,7 @@ HEADERS = {
                   "Chrome/120.0.0.0 Safari/537.36"
 }
 
-SOURCES = [
-    "https://content.cs.umass.edu/content/spring-2026-course-descriptions",
-    "https://content.cs.umass.edu/content/fall-2025-course-description",
-    "https://content.cs.umass.edu/content/spring-2025-course-descriptions",
-    "https://content.cs.umass.edu/content/fall-2024-course-descriptions",
-    "https://www.cics.umass.edu/academics/courses/prerequisite-catalog-and-credit-changes"
-]
+SOURCES = config["sources"]
 
 def clean_url(url):
     return url.replace("https://", "").replace("http://", "").replace("/", "_").replace(".", "-")+".txt"
@@ -40,15 +41,15 @@ def get_key_from_val(d, val):
     return None
 
 def save_text(cur_url, text):
-    out_path = OUT_DIR / clean_url(cur_url)
-    if not out_path.parent.exists():
-        out_path.parent.mkdir(parents=True, exist_ok=True)
+    # saves text to file and returns file path
+    out_path = os.path.join(OUT_DIR, Util.clean_url(cur_url) + ".txt")
     if os.path.exists(out_path):
-        return
+        return out_path
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(text)
+    return out_path
 
-def recursive_fetch(base_url, max_depth=2, visited=set(), cur_url_mappings = {}):
+def recursive_fetch(base_url, mapping = {}, max_depth=2, visited=set()):
     text, links = fetch_and_strip(base_url, strip_from_top=strip[0], strip_from_bottom=strip[1], headers=HEADERS)
     cur_urls = set(links.values())
     save_text(base_url, text)
@@ -63,32 +64,37 @@ def recursive_fetch(base_url, max_depth=2, visited=set(), cur_url_mappings = {})
         for url in cur_urls:
             try:
                 txt, lnks = fetch_and_strip(url, headers=HEADERS, strip_from_top=strip[0], strip_from_bottom=strip[1])
-                save_text(url, txt)
+                path = save_text(url, txt)
                 new_urls.update(lnks.values())
+                mapping[path] = url # Maps from filename to cleaned URL
+                # print(len(visited), " ", len(mapping), " ", url)
             except HTMLFetchError:
                 pass
             except InvalidURLError:
                 pass
             except Exception as e:
-                print(f"Unexpected error fetching {url}: {e}")
-    rev_url_mappings = cur_url_mappings
-    for cur_url in visited:
-        rev_url_mappings[clean_url(cur_url)] = cur_url
-    return visited, rev_url_mappings
+                # moved to file for clean console output
+                with open(FETCH_ERROR_FILE, "a", encoding="utf-8") as f:
+                    f.write(f"{url}\n")
+                # print(f"Error fetching {url}: {e}") # uncomment for debug purposes
+    return visited, mapping
 
-def main(sources=SOURCES):
-    fetch_all(sources)
+def main():
+    fetch_all()
 
 def fetch_all(sources=SOURCES):
+    with open(FETCH_ERROR_FILE, "w", encoding="utf-8") as f:
+        pass # clear error file
+    mapping = {}
     visited_so_far = set()
     cur_url_mappings = {}
     visited_so_far.add("")
     visited_so_far.update(sources)
     for url in sources:
-        visited_so_far, cur_url_mappings = recursive_fetch(url, visited=visited_so_far, cur_url_mappings=cur_url_mappings)
-    with open("data/mappings/file-url-mappings.json", "w") as f:
-        json.dump(cur_url_mappings, f, indent=4)
-    return visited_so_far, cur_url_mappings
+        # print(url)
+        visited_so_far, mapping = recursive_fetch(url, mapping=mapping, visited=visited_so_far, max_depth=config["recursive_depth"])
+    Util.save_json(MAPPING_FILE, mapping)
+    # print(f"Visited {len(visited_so_far)} URLs.")
 
 if __name__ == "__main__":
     Util.time_execution(main)

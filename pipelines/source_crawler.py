@@ -6,6 +6,8 @@ try:
 except ModuleNotFoundError:
     from Errors import HTMLFetchError, InvalidURLError
 from urllib.parse import urljoin, urlparse
+import logging
+logging.getLogger("pypdf").setLevel(logging.ERROR) # silence all warnings about invalid markers or wrong-pointing objects (common but completely irrelevant)
 
 ignore_domains = set(["mailto:", "tel:", "youtube.com", "youtu.be", "twitter.com", "facebook.com", "linkedin.com", "arxiv.org", ".pptx"])
 
@@ -32,14 +34,16 @@ def fetch_and_strip(url, headers, remove_selectors=None, remove_tag_names=None, 
     if ("pdf" in url) or url_parsed.endswith(".pdf"):
         # print(url)
         try:
+            # first try fetching as PDF
             loader = PyPDFLoader(url)
             documents = loader.load()
             full_text = "\n".join([doc.page_content for doc in documents])
             return full_text, {}
         except Exception as e:
+            # if any issues arise just HTML fetch (search for "pdf" results in false positives)
             if url_parsed.endswith(".pdf"):
                 raise HTMLFetchError(f"Error fetching PDF from {url}: {e}")
-            print(f"Error loading PDF from {url}: {e}")
+            # print(f"Error loading PDF from {url}: {e}")
             # fallback to HTML fetch
     resp = requests.get(url, headers=headers, timeout=timeout)
     if not resp.ok:

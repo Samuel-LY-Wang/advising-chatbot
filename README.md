@@ -5,52 +5,48 @@ It uses a Retrieval-Augmented Generation (RAG) pipeline to answer questions abou
 
 ## Architecture
 
-- **Data collection:** `pipelines/bulk_sources_crawler`
-- **Chunking:** `pipelines/chunk.py`
-- **Embedding & Indexing:** `pipelines/embed_index.py` (local SentenceTransformers)
-- **Retrieval:** `rag/pipeline.py`
+- **Data collection:** `pipelines/bulk_sources_crawler.py`
+- **Chunking:** `pipelines/save_chunks.py`
+- **Embedding & Indexing:** `pipelines/save_chunks_to_db.py` (local SentenceTransformers)
+- **Retrieval:** `rag/query_data.py` (two-step with k=40, top 5 kept after rerank)
 - **Web Interface:** `apps/api/main.py` (FastAPI web UI)
 
 
 ## Setup
 
+(with uv) \
 ```bash
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-## Local LLM Integration
-This project uses Ollama to run LLMs locally. Therefore, before running the code, you must:
-- Install Ollama
-- ```bash
-ollama pull nomic-embed-text
-```
-- ```bash
-ollama pull mistral
-```
-
-## How to add additional sources
-First, add the link and name into pipelines/bulk_sources_crawler.py \\
-Then, run pipelines/bulk_sources_crawler.py \\
-Then, run pipelines/text_to_json.py to convert the text data into json \\
-Then, run pipelines/chunk.py to chunk the json data. \\
-Finally, run embed_index to vector embed all the chunks. \\
-Should work as intended from there.
-
-## Note on Apple Silicon
-
-The line "import sentence_transformers" will hang if run on Python 3.13 \
-Therefore, if you are using a Silicon mac, create your venv using Python 3.12, with the following setup (conda):
-```bash
-conda create -n venv_name python=3.12
-conda activate venv_name
-pip install -r requirements.txt
-```
-
-Alternatively, use uv:
-```bash
-uv venv --python 3.12
+uv venv --python 3.9
 source .venv/bin/activate
 uv pip install -r requirements.txt
 ```
+
+## Local LLM Integration
+This project uses Ollama to run AI models locally. \\
+For embeddings:
+- Install Ollama (OS-dependent)
+- For text embedding:
+- ```bash
+ollama pull bge-m3
+```
+- For the reranker:
+- ```bash
+ollama pull qllama/bge-reranker-v2-m3
+```
+- To test, we use a more lightweight model:
+- ```bash
+ollama pull qwen3.5:4b
+```
+- Deployment uses the more powerful qwen3.5:27b model:
+- ```bash
+ollama pull qwen3.5:27b
+```
+
+## How to add additional sources
+First, add the link to the "sources" part of config.json \\
+Then, simply run pipelines/rebuild_database.py
+
+## Next steps:
+Attempting to get ollama installed and a server running on Unity cluster \\
+Have inline citations (current approach has end-of-text citations, not all of which are used) \\
+Migrate the entire thing to Unity (w/ improvements like recursive depth 2 on links, and perhaps upgrade from qwen3.5:9b to qwen3.5:27b)

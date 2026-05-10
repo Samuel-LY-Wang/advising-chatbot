@@ -7,10 +7,17 @@ try:
 except ModuleNotFoundError:
     import Util
 
-import os
-CUR_PATH = os.getcwd()
-CHROMA_PATH = os.path.join(CUR_PATH, "data/chroma_db")
-DATA_PATH = os.path.join(CUR_PATH, "data/chunks")
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from open_config import load_config
+config = load_config()
+CUR_PATH = config["cwd"]
+CHROMA_PATH = os.path.join(CUR_PATH, config["db_path"])
+if (not os.path.exists(CHROMA_PATH)):
+    os.makedirs(CHROMA_PATH)
+DATA_PATH = os.path.join(CUR_PATH, config["chunk_path"])
+if (not os.path.exists(DATA_PATH)):
+    os.makedirs(DATA_PATH)
 
 def save_to_chroma(chunks: list[Document], chroma_path=CHROMA_PATH):
     # Clear out the database first.
@@ -19,10 +26,10 @@ def save_to_chroma(chunks: list[Document], chroma_path=CHROMA_PATH):
 
     # Create a new DB from the documents.
     Chroma.from_documents(
-        chunks, OllamaEmbeddings(model="nomic-embed-text", base_url="http://localhost:11434"), persist_directory=chroma_path
+        chunks, OllamaEmbeddings(model=config["embed_model"], base_url="http://localhost:11434"), persist_directory=chroma_path
     )
     
-    print(f"Saved {len(chunks)} chunks to {chroma_path}.")
+    # print(f"Saved {len(chunks)} chunks to {chroma_path}.")
 
 def load_chunks(data_path = DATA_PATH) -> list[Document]:
     chunks = []
@@ -33,7 +40,7 @@ def load_chunks(data_path = DATA_PATH) -> list[Document]:
                 content = f.read()
                 chunk = Document(page_content=content, metadata={"source": filename})
                 chunks.append(chunk)
-    print(f"Loaded {len(chunks)} chunks from {data_path}.")
+    # print(f"Loaded {len(chunks)} chunks from {data_path}.")
     return chunks
 
 def main():

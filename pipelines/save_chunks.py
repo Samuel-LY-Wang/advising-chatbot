@@ -5,9 +5,10 @@ from langchain_core.documents import Document
 # from langchain.embeddings import OpenAIEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
-import openai 
+# import openai 
 from dotenv import load_dotenv
 import os
+import sys
 import shutil
 import nltk
 try:
@@ -15,6 +16,10 @@ try:
 except ModuleNotFoundError:
     import Util
 import json
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from open_config import load_config
+config = load_config()
 
 import warnings
 warnings.filterwarnings("ignore", message=r"libmagic is unavailable.*")
@@ -26,64 +31,59 @@ load_dotenv()
 #---- Set OpenAI API key 
 # Change environment variable name from "OPENAI_API_KEY" to the name given in 
 # your .env file.
-openai.api_key = os.environ['OPENAI_API_KEY']
+# openai.api_key = os.environ['OPENAI_API_KEY']
 
-CUR_PATH = os.getcwd()
-OUT_PATH = os.path.join(CUR_PATH, "data/chunks")
-DATA_PATH = os.path.join(CUR_PATH, "data/raw")
+cwd = os.getcwd()
+OUT_PATH = os.path.join(cwd, config["chunk_path"])
+if (not os.path.exists(OUT_PATH)):
+    os.makedirs(OUT_PATH)
+DATA_PATH = os.path.join(cwd, config["raw_data_path"])
+MAPPING_PATH = os.path.join(cwd, config["mappings_path"])
+MAPPING_FILE = os.path.join(MAPPING_PATH, config["chunk_mapping_file"])
 
+config = load_config()
 
 def main():
     generate_data_store()
 
-
-def generate_data_store(data_path=DATA_PATH, output_path=OUT_PATH, urls=None):
+def generate_data_store(data_path=DATA_PATH, output_path=OUT_PATH):
     documents = load_documents(data_path)
-    chunks, doc_chunk_mapping = split_text(documents)
-    print(doc_chunk_mapping)
-    save_text(chunks, doc_chunk_mapping, output_path)
+    chunks = split_and_save_text(documents)
+    save_text(chunks, output_path)
 
-def save_text(chunks: list[str], doc_chunk_mapping: dict[int, str], output_path=OUT_PATH):
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
+def save_text(chunks: list[Document], output_path=OUT_PATH):
     for i, chunk in enumerate(chunks):
         file_path = os.path.join(output_path, f"chunk_{i}.txt")
         with open(file_path, "w", encoding="utf-8") as f:
-            f.write(chunk)
-    if doc_chunk_mapping:
-        mapping_path = "data/mappings/doc-chunk-mappings.json"
-        with open(mapping_path, "w", encoding="utf-8") as f:
-            json.dump(doc_chunk_mapping, f, indent=4)
-    print(f"Saved {len(chunks)} chunks to {output_path}.")
+            f.write(chunk.page_content)
+    # print(f"Saved {len(chunks)} chunks to {output_path}.")
 
 def load_documents(data_path=DATA_PATH) -> list[Document]:
     loader = DirectoryLoader(data_path, glob="*.txt", recursive=True)
     ## loader = PyPDFLoader(DATA_PATH + "/the-hundred-page-language-models-book-hands-on-with-pytorch.pdf")
     documents = loader.load()
-    print(f"Loaded {len(documents)} documents from {data_path}.")
+    # print(f"Loaded {len(documents)} documents from {data_path}.")
     return documents
 
 
-def split_text(documents: list[Document]):
-    doc_chunk_mapping = {}
+def split_and_save_text(documents: list[Document]):
+    mapping = {}
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=300,
-        chunk_overlap=100,
+        chunk_size=config["chunk_size"],
+        chunk_overlap=config["chunk_overlap"],
         length_function=len,
         add_start_index=True,
     )
-    chunks=[]
-    num_added_chunks = 0
     num_chunks = 0
-    for i, document in enumerate(documents):
-        url = document.metadata.get("source", f"document_{i}")
-        new_chunks = text_splitter.split_text(document.page_content)
-        num_added_chunks = len(new_chunks)
-        for j in range(num_added_chunks):
-            doc_chunk_mapping[num_chunks+j] = url
-        num_chunks += num_added_chunks
-        chunks.extend(new_chunks)
-    print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
+    for doc in documents:
+        doc_chunks = text_splitter.split_text(doc.page_content)
+        for i in range(len(doc_chunks)):
+            mapping[os.path.join(OUT_PATH, f"chunk_{num_chunks + i}.txt")] = doc.metadata.get("source", None)
+        num_chunks += len(doc_chunks)
+    chunks = text_splitter.split_documents(documents)
+    # print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
+
+    Util.save_json(MAPPING_FILE, mapping)
 
     # document = chunks[0]
     # print(document.page_content)
