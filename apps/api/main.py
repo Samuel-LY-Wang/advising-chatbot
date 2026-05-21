@@ -13,6 +13,7 @@ import markdown
 
 import logging
 logging.getLogger("pypdf").setLevel(logging.ERROR)
+logging.basicConfig(level=logging.INFO, filename="logs/api.log", filemode="w", format="%(asctime)s - %(levelname)s - %(message)s")
 
 #TODO: change API package from FastAPI to the slurm one (deploy to Unity cluster)
 

@@ -2,7 +2,7 @@ import time
 import json
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, filename="logs/timing.log", filemode="w", format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 def time_execution(func, out="Execution time: "):
