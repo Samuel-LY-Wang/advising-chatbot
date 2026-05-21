@@ -14,6 +14,8 @@ import markdown
 import logging
 logging.getLogger("pypdf").setLevel(logging.ERROR)
 
+#TODO: change API package from FastAPI to the slurm one (deploy to Unity cluster)
+
 app = FastAPI(title="Advising Chatbot RAG API")
 templates = Jinja2Templates(directory="apps/api/templates")
 
@@ -23,9 +25,9 @@ def home(request: Request):
 
 @app.get("/ask")
 def ask(q: str = Query(..., description="Your question")):
-    print("Received question:", q)
+    logging.info("Received question: %s", q)
     ans, sources = Util.time_execution(lambda: answer(q, debug=False), out="Answer time: ")
-    print(ans)
+    logging.info("Generated answer: %s", ans)
     source_links = [URL_utils.to_html_link(url, str(i+1)) for i, url in enumerate(sources)]
     return {"question": q, "answer": markdown.markdown(ans), "sources": source_links}
 
@@ -39,6 +41,7 @@ def rebuild_db(request: Request):
         rebuild_database.main()
         return {"status": "success", "message": "Database rebuilt successfully."}
     except Exception as e:
+        logging.error("Error rebuilding database: %s", str(e))
         traceback.print_exc()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
