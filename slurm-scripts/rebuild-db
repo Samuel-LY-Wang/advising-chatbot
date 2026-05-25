@@ -20,6 +20,9 @@ echo "Start Time: $(date)"
 echo "Working Directory: $(pwd)"
 echo "==============================================="
 
-source .venv/bin/activate
+# RUN IN HOME DIRECTORY
+
 apptainer exec --nv ollama.sif ollama serve > ollama.log 2>&1 &
+cd advising-chatbot
+source .venv/bin/activate
 python pipelines/rebuild_database.py

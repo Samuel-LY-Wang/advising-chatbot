@@ -19,15 +19,21 @@ DATA_PATH = os.path.join(CUR_PATH, config["chunk_path"])
 if (not os.path.exists(DATA_PATH)):
     os.makedirs(DATA_PATH)
 
-def save_to_chroma(chunks: list[Document], chroma_path=CHROMA_PATH, verbose=False):
+def save_to_chroma(chunks: list[Document], chroma_path=CHROMA_PATH, verbose=False, batch_size=None):
     # Clear existing DB (if any)
     if os.path.exists(chroma_path):
         shutil.rmtree(chroma_path)
 
     # Create new DB
-    Chroma.from_documents(
-        chunks, OllamaEmbeddings(model=config["embed_model"], base_url="http://localhost:11434"), persist_directory=chroma_path
-    )
+    if batch_size is None:
+        Chroma.from_documents(
+            chunks, OllamaEmbeddings(model=config["embed_model"], base_url="http://localhost:11434"), persist_directory=chroma_path
+        )
+    else:
+        chroma_db = Chroma(persist_directory=chroma_path, embedding_function=OllamaEmbeddings(model=config["embed_model"], base_url="http://localhost:11434"))
+        for i in range(0, len(chunks), batch_size):
+            batch = chunks[i:min(i+batch_size, len(chunks))]
+            chroma_db.add_documents(batch)
     if verbose:
         print(f"Saved {len(chunks)} chunks to {chroma_path}.")
 
