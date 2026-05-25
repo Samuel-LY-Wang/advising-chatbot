@@ -1,7 +1,7 @@
 {
     "recursive_depth": 2,
     "ignore_domains": ["mailto:", "tel:", "youtube.com", "youtu.be", "twitter.com", "facebook.com", "linkedin.com", "arxiv.org", ".pptx"],
-    "embed_model": "bge-m3",
+    "embed_model": "qwen3-embedding:4b",
     "rerank_model": "BAAI/bge-reranker-v2-m3",
     "chat_model": "qwen3.5:4b",
     "chunk_size": 300,
