@@ -21,4 +21,4 @@ test
 data/*
 
 #logs
-logs/*
+logs/*.log
