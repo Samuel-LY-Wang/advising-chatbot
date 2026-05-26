@@ -1,0 +1,36 @@
+#!/bin/bash
+#SBATCH --job-name=rebuild_rag_embeddings      # Job name for the GRPO training
+#SBATCH --partition=gpu,gpu-preempt      # CPUs are in much greater supply, thus we can use a lot of them
+#SBATCH --nodes=1
+#SBATCH --time=6:00:00
+#SBATCH --ntasks=4                # 8 CPUs are good for data loading and evaluation threads
+#SBATCH --gpus=1
+#SBATCH --mem=40G                        # decent amount of RAM
+#SBATCH --output=logs/inference_test_%j.out # Log output to a 'logs' directory
+#SBATCH --error=logs/inference_test_%j.err  # Log errors to a 'logs' directory
+#SBATCH --constraint="a100"
+# Job information
+echo "==============================================="
+echo "CICS Chatbot"
+echo "==============================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Job Name: $SLURM_JOB_NAME"
+echo "Node: $SLURMD_NODENAME"
+echo "Start Time: $(date)"
+echo "Working Directory: $(pwd)"
+echo "==============================================="
+
+# RUN IN HOME DIRECTORY
+
+apptainer exec --nv ollama.sif ollama serve > ollama.log 2>&1 &
+cd advising-chatbot
+source .venv/bin/activate
+# TEST SIMPLE RETRIEVAL PROMPTS
+python rag/query_data.py "Who teaches OOP?"
+python rag/query_data.py "What are the requirements for a CS degree?"
+# TEST REASONING PROMPT
+python rag/query_data.py "Is it allowed to AI-generate a practice exam to study with?"
+python rag/query_data.py "What courses should I take to see if I would be interested in transferring to CICS?"
+# TEST IRRELEVANT PROMPTS
+python rag/query_data.py "What will the weather be like today?"
+python rag/query_data.py "How do I write a Python script to get the maximum element of an array?"

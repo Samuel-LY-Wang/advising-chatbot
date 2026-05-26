@@ -11,6 +11,10 @@ try:
     from rag import reverse_map
 except ModuleNotFoundError:
     import reverse_map
+    
+import logging
+logging.basicConfig(level=logging.INFO, filename="logs/query_log.log", filemode="w", format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from open_config import load_config
@@ -48,7 +52,7 @@ def search_DB(db: Chroma, query_text: str, k: int = 3):
     results = db.similarity_search_with_relevance_scores(query_text, k=k)
     return results
 
-def answer_query(query_text: str, debug=False):
+def answer_query(query_text: str, logger=logger, debug=False):
     db = Util.time_execution(prepare_DB, out="DB preparation time: ")
 
     # Search the DB.
@@ -63,7 +67,7 @@ def answer_query(query_text: str, debug=False):
         print(f"Reranked results: {results}")
     else:
         results = re_ranker(query_text, results, num_to_return=config["chunks_to_keep"])
-    # print(results)
+    logger.info(results)
 
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
     if debug:
@@ -100,16 +104,16 @@ def re_ranker(query_text: str, results: list[tuple], num_to_return: int=5):
     return top_results
 
 
-def main():
+def main(logger=logger):
     # Create CLI.
     parser = argparse.ArgumentParser()
     parser.add_argument("query_text", type=str, help="The query text.")
     args = parser.parse_args()
     query_text = args.query_text
-
+    logger.info("Answering query: %s", query_text)
     res, sources = answer_query(query_text)
-    print(f"Answer: {res}")
-    print(f"Sources: {sources}")
+    logger.info("Answer: %s", res)
+    logger.info("Sources: %s", sources)
 
 
 if __name__ == "__main__":
